@@ -27,14 +27,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              child: Text(
-                "Calendário",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w500,
+            // Campo de pesquisa
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: TextField(
+                decoration: InputDecoration(
+                  labelText: 'Pesquisar',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
+                onChanged: (text) {
+                  // Implemente sua lógica de pesquisa aqui
+                  // Você pode atualizar os dados exibidos com base no texto de pesquisa
+                },
               ),
             ),
             const SizedBox(height: 20),
@@ -59,7 +66,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           EdgeInsets.symmetric(vertical: 11, horizontal: 20),
                       decoration: BoxDecoration(
                         color: _buttonIndex == 0
-                            ? Color(0xFF7165D6)
+                            ? Color.fromARGB(255, 29, 6, 229)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -85,7 +92,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           EdgeInsets.symmetric(vertical: 11, horizontal: 20),
                       decoration: BoxDecoration(
                         color: _buttonIndex == 1
-                            ? Color(0xFF7165D6)
+                            ? Color.fromARGB(255, 29, 6, 229)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -111,7 +118,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           EdgeInsets.symmetric(vertical: 11, horizontal: 20),
                       decoration: BoxDecoration(
                         color: _buttonIndex == 2
-                            ? Color(0xFF7165D6)
+                            ? Color.fromARGB(255, 29, 6, 229)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -170,14 +177,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                     fontSize: 22,
                                     fontWeight:
                                         FontWeight.bold, // Texto em negrito
-                                    color: Color.fromARGB(255, 29, 6,
-                                        229), // Altera a cor do texto para azul
-                                  ),
-                                ),
-                                Text(
-                                  "Endereço: Av. Walter Antonio, Assis, SP",
-                                  style: TextStyle(
-                                    fontSize: 18,
                                     color: Color.fromARGB(255, 29, 6,
                                         229), // Altera a cor do texto para azul
                                   ),
@@ -259,7 +258,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                     padding: EdgeInsets.symmetric(
                                         vertical: 15, horizontal: 57),
                                     child: Text(
-                                      "Entrar",
+                                      "Ver disponibilidade",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,

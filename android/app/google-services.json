@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "438899087732",
+    "project_id": "agendamento-tcc-8164f",
+    "storage_bucket": "agendamento-tcc-8164f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438899087732:android:6ea58df2041a65a5e23421",
+        "android_client_info": {
+          "package_name": "com.example.project_tcc_agend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "438899087732-rr5ro9iqbol97pianv1of71639p55m2l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDasAFmFusuRBtBrQ_sqHZFETc_LnsvaN4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "438899087732-rr5ro9iqbol97pianv1of71639p55m2l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

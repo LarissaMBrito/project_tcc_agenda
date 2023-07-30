@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:project_tcc_agend/screnns/signupmed_screen.dart';
+import 'package:project_tcc_agend/screnns/signupatient_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text('Login'),
         backgroundColor: const Color.fromARGB(255, 29, 6, 229),
       ),
       body: Container(
@@ -144,6 +145,11 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _senhaControoler.text,
       );
 
+      // A verificação abaixo foi removida para tratar o caso de login inválido.
+      // if (userCredential.user == null) {
+      //   // Usuário não está cadastrado.
+      //   _showAlertDialog('Usuário não cadastrado. Verifique suas credenciais.');
+      // } else {
       // O login foi bem-sucedido. Você pode fazer alguma ação aqui, se necessário.
       // Por exemplo, atualizar o nome de exibição do usuário.
       await userCredential.user!.updateDisplayName(_emailController.text);
@@ -153,26 +159,39 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(builder: (context) => NavBarRoots()),
       );
+      // }
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Usuário não encontrado'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sua senha está errada'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        _showAlertDialog(
+            'Usuário ou senha incorretos. Verifique suas credenciais.');
+      } else {
+        _showAlertDialog('Usuario não cadastrado.');
       }
     } catch (e) {
       // Caso ocorra algum erro não relacionado à autenticação.
       // Por exemplo, problemas de conexão ou outros erros.
-      print('Erro inesperado durante o login: $e');
+      _showAlertDialog('Usuario não cadastrado.');
+      print('Usuario não cadastrado: $e');
     }
+  }
+
+  void _showAlertDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Alerta'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:project_tcc_agend/screnns/login_screen.dart';
-import 'package:project_tcc_agend/screnns/signupmed_screen.dart';
+import 'package:project_tcc_agend/screnns/signupatient_screen.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatelessWidget {

@@ -19,10 +19,6 @@ class _NavBarRootsState extends State<NavBarRoots> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 29, 6, 229),
-      ),
-      backgroundColor: Colors.white,
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
         height: 80,

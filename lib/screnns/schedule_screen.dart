@@ -256,12 +256,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                     },
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(
-                                          vertical: 15, horizontal: 57),
+                                          vertical: 10, horizontal: 50),
                                       child: Text(
                                         "Ver disponibilidade",
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 15,
+                                          fontSize: 17,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),

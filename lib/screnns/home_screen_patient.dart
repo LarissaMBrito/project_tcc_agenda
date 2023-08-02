@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreenPatient extends StatelessWidget {
   final List<Map<String, dynamic>> _especialidades = [
     {"nome": "Oftalmologista", "imagem": "images/oftalmologista.jpg"},
     {"nome": "Cardiologista", "imagem": "images/cardiologista.jpg"},

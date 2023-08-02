@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:project_tcc_agend/screnns/home_screen_patient.dart';
-import 'package:project_tcc_agend/screnns/schedule_screen.dart';
+import 'package:project_tcc_agend/screnns/home_screen_med.dart';
 import 'package:project_tcc_agend/screnns/settings_screen.dart';
 
-class NavBarRoots extends StatefulWidget {
+class NavBarRoots_Med extends StatefulWidget {
   @override
-  State<NavBarRoots> createState() => _NavBarRootsState();
+  State<NavBarRoots_Med> createState() => _NavBarRoots_MedState();
 }
 
-class _NavBarRootsState extends State<NavBarRoots> {
+class _NavBarRoots_MedState extends State<NavBarRoots_Med> {
   int _selectedIndex = 0;
   final _screens = [
-    HomeScreenPatient(),
-    ScheduleScreen(),
+    HomeScreenMed(),
+    Container(),
     SettingScreen(),
   ];
 
@@ -44,7 +43,7 @@ class _NavBarRootsState extends State<NavBarRoots> {
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.calendar_month),
-                label: "Calendário",
+                label: "Disponibilzar",
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),

@@ -41,7 +41,7 @@ class WelcomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 27),
+            SizedBox(height: 55),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -58,7 +58,7 @@ class WelcomeScreen extends StatelessWidget {
                     },
                     child: Padding(
                       padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 57),
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 50),
                       child: Text(
                         "Acessar",
                         style: TextStyle(
@@ -70,7 +70,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 25),
+                SizedBox(height: 50),
                 Material(
                   color: Color.fromARGB(255, 29, 6, 229),
                   borderRadius: BorderRadius.circular(10),
@@ -84,7 +84,7 @@ class WelcomeScreen extends StatelessWidget {
                     },
                     child: Padding(
                       padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 50),
                       child: Text(
                         "Cadastre-se",
                         style: TextStyle(

@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:project_tcc_agend/screnns/signupatient_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_tcc_agend/screnns/signupatient_screen.dart';
 
 import '../widgets/navbar_roots.dart';
+import '../widgets/navbar_roots_med.dart'; // Importe a tela NavBarRoots_Med
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +21,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _senhaControoler = TextEditingController();
   final _firebaseAuth = FirebaseAuth.instance;
+
+  // Função para determinar o tipo de usuário com base no UID do usuário logado
+  Future<String?> _determineTipoUsuario(String uid) async {
+    String? tipoUsuario;
+    try {
+      DocumentSnapshot docSnapshot =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      tipoUsuario = docSnapshot.get('tipo');
+    } catch (e) {
+      print('Erro ao recuperar o tipo de usuário: $e');
+    }
+    return tipoUsuario;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Padding(
                       padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 57),
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 50),
                       child: Text(
                         "Entrar",
                         style: TextStyle(
@@ -113,10 +128,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextButton(
                       onPressed: () {
                         Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SignUpMedScreen(),
-                            ));
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SignUpMedScreen(),
+                          ),
+                        );
                       },
                       child: Text(
                         "Crie uma agora",
@@ -145,33 +161,49 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _senhaControoler.text,
       );
 
-      // A verificação abaixo foi removida para tratar o caso de login inválido.
-      // if (userCredential.user == null) {
-      //   // Usuário não está cadastrado.
-      //   _showAlertDialog('Usuário não cadastrado. Verifique suas credenciais.');
-      // } else {
-      // O login foi bem-sucedido. Você pode fazer alguma ação aqui, se necessário.
-      // Por exemplo, atualizar o nome de exibição do usuário.
-      await userCredential.user!.updateDisplayName(_emailController.text);
+      if (userCredential.user == null) {
+        _showAlertDialog(
+            'Usuário ou senha incorretos. Verifique suas credenciais.');
+      } else {
+        // O login foi bem-sucedido. Atualize o nome de exibição do usuário.
+        await userCredential.user!.updateDisplayName(_emailController.text);
 
-      // Navegar para a próxima tela somente após o login bem-sucedido.
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => NavBarRoots()),
-      );
-      // }
+        // Determine o tipo de usuário com base no UID do usuário logado
+        String? tipoUsuario =
+            await _determineTipoUsuario(userCredential.user!.uid);
+
+        // Navegue para a próxima tela somente após o login bem-sucedido.
+        if (tipoUsuario == "medico") {
+          // Se o tipo for "medico", direcione para a tela NavBarRoots_Med
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NavBarRoots_Med()),
+          );
+        } else if (tipoUsuario == "paciente") {
+          // Se o tipo for "paciente", direcione para a tela NavBarRoots
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NavBarRoots()),
+          );
+        } else {
+          // Tipo de usuário desconhecido ou não encontrado no Firestore.
+          // Aqui você pode direcionar para uma tela padrão ou exibir uma mensagem de erro.
+          // Por exemplo:
+          // _showAlertDialog('Tipo de usuário desconhecido.');
+        }
+      }
     } on FirebaseAuthException catch (e) {
+      // Tratamento de erros de autenticação
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {
         _showAlertDialog(
             'Usuário ou senha incorretos. Verifique suas credenciais.');
       } else {
-        _showAlertDialog('Usuario não cadastrado.');
+        _showAlertDialog('Erro ao fazer login: $e');
       }
     } catch (e) {
       // Caso ocorra algum erro não relacionado à autenticação.
-      // Por exemplo, problemas de conexão ou outros erros.
-      _showAlertDialog('Usuario não cadastrado.');
-      print('Usuario não cadastrado: $e');
+      _showAlertDialog('Erro ao fazer login: $e');
+      print('Erro ao fazer login: $e');
     }
   }
 

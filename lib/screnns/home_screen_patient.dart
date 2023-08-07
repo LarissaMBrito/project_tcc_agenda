@@ -3,9 +3,9 @@ import 'package:flutter/rendering.dart';
 
 class HomeScreenPatient extends StatelessWidget {
   final List<Map<String, dynamic>> _especialidades = [
-    {"nome": "Oftalmologista", "imagem": "images/oftalmologista.jpg"},
-    {"nome": "Cardiologista", "imagem": "images/cardiologista.jpg"},
-    {"nome": "Psicologo", "imagem": "images/Psicologo.jpg"},
+    {"nome": "Ginecologista", "imagem": "images/ginecologista.jpeg"},
+    {"nome": "Pediatra", "imagem": "images/pediatra.jpeg"},
+    {"nome": "Cardiologista", "imagem": "images/cardiologista.jpeg"},
   ];
 
   @override

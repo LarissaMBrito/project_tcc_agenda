@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project_tcc_agend/screnns/available_screen.dart';
 import 'package:project_tcc_agend/screnns/home_screen_med.dart';
 import 'package:project_tcc_agend/screnns/settings_screen.dart';
 
@@ -11,7 +12,7 @@ class _NavBarRoots_MedState extends State<NavBarRoots_Med> {
   int _selectedIndex = 0;
   final _screens = [
     HomeScreenMed(),
-    Container(),
+    EventApp(),
     SettingScreen(),
   ];
 

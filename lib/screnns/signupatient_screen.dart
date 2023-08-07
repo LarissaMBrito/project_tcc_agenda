@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:project_tcc_agend/screnns/terms_use_screen.dart';
 import 'login_screen.dart';
-import 'package:flutter/src/material/dropdown.dart';
 
 class SignUpMedScreen extends StatefulWidget {
   @override
@@ -14,26 +13,17 @@ class SignUpMedScreen extends StatefulWidget {
 class _SignUpMedScreenState extends State<SignUpMedScreen> {
   bool passToggle = true;
   bool _isConsentGiven = false;
-  String?
-      _selectedUserType; // Adicione este atributo para armazenar o tipo de usuário selecionado
+  String? _selectedUserType;
 
   final _nomeControoler = TextEditingController();
   final _emailControler = TextEditingController();
   final _telefoneControoler = TextEditingController();
   final _cpfControoler = TextEditingController();
+  final _crmControoler = TextEditingController();
+  final _enderecoControoler = TextEditingController();
+  final _especialidadeControoler = TextEditingController();
   final _senhaControoler = TextEditingController();
   final _firebaseAuth = FirebaseAuth.instance;
-
-  // Função para determinar o tipo de usuário com base na seleção do formulário
-  String _determineTipoUsuario() {
-    if (_selectedUserType == "Médico") {
-      return "medico"; // Se o usuário selecionou "Médico", retorna "medico"
-    } else if (_selectedUserType == "Paciente") {
-      return "paciente"; // Se o usuário selecionou "Paciente", retorna "paciente"
-    } else {
-      return ""; // Ou pode retornar algum valor padrão, caso nenhum tipo seja selecionado.
-    }
-  }
 
   cadastrar() async {
     try {
@@ -43,7 +33,8 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
         password: _senhaControoler.text,
       );
 
-      String tipoUsuario = _determineTipoUsuario();
+      String tipoUsuario =
+          _selectedUserType == "Médico" ? "medico" : "paciente";
 
       Map<String, dynamic> userData = {
         'nome': _nomeControoler.text,
@@ -51,14 +42,31 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
         'telefone': _telefoneControoler.text,
         'cpf': _cpfControoler.text,
         'senha': _senhaControoler.text,
-        'tipo': tipoUsuario,
       };
 
-      CollectionReference usersCollection =
-          FirebaseFirestore.instance.collection('users');
-      await usersCollection.doc(userCredential.user!.uid).set(userData);
+      if (_selectedUserType == "Médico") {
+        userData['crm'] = _crmControoler.text;
+        userData['endereco'] = _enderecoControoler.text;
+        userData['especialidade'] = _especialidadeControoler.text;
+      }
 
-      await userCredential.user!.updateDisplayName(_nomeControoler.text);
+      CollectionReference userTypeCollection =
+          FirebaseFirestore.instance.collection(tipoUsuario);
+      await userTypeCollection.doc(userCredential.user!.uid).set(userData);
+
+      String nomeExibicao = _nomeControoler.text.trim();
+      List<String> nomePartes = nomeExibicao.split(' ');
+      if (nomePartes.isNotEmpty) {
+        nomeExibicao = nomePartes[0];
+      }
+
+      await userCredential.user!.updateDisplayName(nomeExibicao);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Usuário cadastrado com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
       Navigator.push(
         context,
@@ -66,24 +74,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
           builder: (context) => LoginScreen(),
         ),
       );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Crie uma senha mais forte'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      } else if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Este e-mail já foi cadastrado'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
     } catch (e) {
-      // Tratamento de outros erros
       print('Erro ao cadastrar usuário: $e');
     }
   }
@@ -112,72 +103,6 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
               children: [
                 SizedBox(height: 15),
                 Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                  child: textField,
-                ),
-                SizedBox(height: 15),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                  child: TextField(
-                    controller: _emailControler,
-                    decoration: InputDecoration(
-                      labelText: "E-Mail",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 15),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                  child: TextField(
-                    controller: _telefoneControoler,
-                    decoration: InputDecoration(
-                      labelText: "Telefone",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.phone),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 15),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                  child: TextField(
-                    controller: _cpfControoler,
-                    decoration: InputDecoration(
-                      labelText: "CPF",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 15),
-                Padding(
-                  padding: EdgeInsets.all(12),
-                  child: TextField(
-                    controller: _senhaControoler,
-                    obscureText: passToggle,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: "Senha",
-                      prefixIcon: Icon(Icons.lock),
-                      suffixIcon: InkWell(
-                        onTap: () {
-                          setState(() {
-                            passToggle = !passToggle;
-                          });
-                        },
-                        child: Icon(
-                          passToggle
-                              ? CupertinoIcons.eye_slash_fill
-                              : CupertinoIcons.eye_fill,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15),
                   child: DropdownButtonFormField<String>(
                     value: _selectedUserType,
@@ -199,6 +124,137 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                     }).toList(),
                   ),
                 ),
+                SizedBox(height: 20),
+                _selectedUserType == "Médico"
+                    ? Column(
+                        children: [
+                          textField,
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _emailControler,
+                            decoration: InputDecoration(
+                              labelText: "E-Mail",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.email),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _senhaControoler,
+                            obscureText: passToggle,
+                            decoration: InputDecoration(
+                              labelText: "Senha",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.lock),
+                              suffixIcon: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    passToggle = !passToggle;
+                                  });
+                                },
+                                child: Icon(
+                                  passToggle
+                                      ? CupertinoIcons.eye_slash_fill
+                                      : CupertinoIcons.eye_fill,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _cpfControoler,
+                            decoration: InputDecoration(
+                              labelText: "CPF",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _crmControoler,
+                            decoration: InputDecoration(
+                              labelText: "CRM",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _enderecoControoler,
+                            decoration: InputDecoration(
+                              labelText: "Endereço de Atendimento",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.location_on),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _especialidadeControoler,
+                            decoration: InputDecoration(
+                              labelText: "Especialidade",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.category),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          textField,
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _emailControler,
+                            decoration: InputDecoration(
+                              labelText: "E-Mail",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.email),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _telefoneControoler,
+                            decoration: InputDecoration(
+                              labelText: "Telefone",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.phone),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _cpfControoler,
+                            decoration: InputDecoration(
+                              labelText: "CPF",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          Padding(
+                            padding: EdgeInsets.all(12),
+                            child: TextField(
+                              controller: _senhaControoler,
+                              obscureText: passToggle,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: "Senha",
+                                prefixIcon: Icon(Icons.lock),
+                                suffixIcon: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      passToggle = !passToggle;
+                                    });
+                                  },
+                                  child: Icon(
+                                    passToggle
+                                        ? CupertinoIcons.eye_slash_fill
+                                        : CupertinoIcons.eye_fill,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                 SizedBox(height: 20),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15),

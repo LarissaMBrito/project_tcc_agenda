@@ -12,7 +12,7 @@ class _NavBarRoots_MedState extends State<NavBarRoots_Med> {
   int _selectedIndex = 0;
   final _screens = [
     HomeScreenMed(),
-    EventApp(),
+    AppointmentScheduler(),
     SettingScreen(),
   ];
 

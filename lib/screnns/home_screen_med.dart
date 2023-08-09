@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart'; // Import the date_symbol_data_local library
 
 void main() {
+  initializeDateFormatting('pt_BR'); // Initialize date formatting for pt_BR
   runApp(MaterialApp(home: HomeScreenMed()));
 }
 
@@ -14,26 +16,24 @@ class HomeScreenMed extends StatefulWidget {
 
 class _HomeScreenMedState extends State<HomeScreenMed> {
   int _buttonIndex = 0;
-  List<Map<String, dynamic>> disponiveis = [];
+  DateTime? _selectedDate;
 
-  @override
-  void initState() {
-    super.initState();
-    _getDisponiveis();
-  }
+  List<Map<String, dynamic>> _patientData = [
+    {
+      "name": "Larissa de Melo Brito",
+      "date": DateTime(2023, 8, 23),
+      "time": "10:00 - 11:00"
+    },
+    // Add more patient data as needed
+  ];
 
-  Future<void> _getDisponiveis() async {
-    try {
-      QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('disponibilizar').get();
-
-      disponiveis = snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+  List<Map<String, dynamic>> get _filteredPatients {
+    if (_selectedDate != null) {
+      return _patientData
+          .where((patient) => patient["date"] == _selectedDate)
           .toList();
-
-      print('Dados disponíveis: $disponiveis');
-    } catch (e) {
-      print('Erro ao recuperar dias disponíveis: $e');
+    } else {
+      return _patientData;
     }
   }
 
@@ -41,189 +41,251 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Agenda"),
+        title: Text("Bem - Vindo"),
         backgroundColor: const Color.fromARGB(255, 29, 6, 229),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Pesquisar',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+        padding: EdgeInsets.only(top: 40),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Olá, Manuela",
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w500,
                   ),
-                  onChanged: (text) {
-                    // Implemente sua lógica de pesquisa aqui
-                    // Você pode atualizar os dados exibidos com base no texto de pesquisa
-                  },
                 ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(5),
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F6FA),
+                CircleAvatar(
+                  radius: 25,
+                  backgroundImage: AssetImage("images/medico.jpg"),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Pesquisar',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildButton(0, "Disponível"),
-                    _buildButton(1, "Agendado"),
-                    _buildButton(2, "Cancelado"),
-                  ],
-                ),
               ),
-              const SizedBox(height: 20),
-
-              // Dias disponíveis
-              if (_buttonIndex == 0) _buildGroupedDaySlots(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildButton(int index, String label) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _buttonIndex = index;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 11, horizontal: 20),
-        decoration: BoxDecoration(
-          color: _buttonIndex == index
-              ? Color.fromARGB(255, 29, 6, 229)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: _buttonIndex == index ? Colors.white : Colors.black38,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGroupedDaySlots() {
-    Column groupedDaySlots = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [],
-    );
-
-    if (disponiveis.isEmpty) {
-      groupedDaySlots.children.add(
-        Center(
-          child: Text('Nenhum dia disponível encontrado.'),
-        ),
-      );
-    } else {
-      Map<String, List<Map<String, dynamic>>> groupedSlots = {};
-
-      // Agrupar os horários pelo dia, mês e ano
-      for (Map<String, dynamic> daySlot in disponiveis) {
-        final date = daySlot['data'];
-        final key =
-            '$date'; // Você pode ajustar esse formato para atender às suas necessidades
-
-        if (!groupedSlots.containsKey(key)) {
-          groupedSlots[key] = [];
-        }
-
-        groupedSlots[key]!.add(daySlot);
-      }
-
-      // Criar os cards para os grupos de horários
-      groupedSlots.forEach((key, slots) {
-        List<Widget> slotWidgets = slots.map((slot) {
-          return GestureDetector(
-            onTap: () {
-              _editAppointment(slot); // Função para editar o horário
-            },
-            child: ListTile(
-              title: Text('${slot['horaInicio']} - ${slot['horaFim']}'),
-              leading: Icon(Icons.calendar_today),
+              onChanged: (text) {},
             ),
-          );
-        }).toList();
-
-        Widget daySlotCard = Card(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  'Dia: ${slots.first['data']}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(5),
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F6FA),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _buttonIndex = 0;
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 11, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: _buttonIndex == 0
+                          ? Color.fromARGB(255, 29, 6, 229)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      "Agendado",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            _buttonIndex == 0 ? Colors.white : Colors.black38,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              ...slotWidgets,
-            ],
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _buttonIndex = 1;
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 11, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: _buttonIndex == 1
+                          ? Color.fromARGB(255, 29, 6, 229)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      "Cancelado",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            _buttonIndex == 1 ? Colors.white : Colors.black38,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-
-        groupedDaySlots.children.add(daySlotCard);
-      });
-    }
-
-    return groupedDaySlots;
-  }
-
-  void _editAppointment(Map<String, dynamic> appointmentData) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            EditAppointmentScreen(appointmentData: appointmentData),
+          SizedBox(height: 30),
+          // Date Picker for Filtering
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: ElevatedButton(
+              onPressed: () async {
+                final selectedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2025),
+                );
+                if (selectedDate != null) {
+                  setState(() {
+                    _selectedDate = selectedDate;
+                  });
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                primary:
+                    Color.fromARGB(255, 29, 6, 229), // Set button color here
+              ),
+              child: Text(
+                "Filtrar por Data",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 20),
+          // Updated section to display doctor's information without ExpansionPanel
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _filteredPatients.map((patient) {
+                return Card(
+                  elevation: 4,
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: AssetImage("images/image.jpg"),
+                      radius: 24,
+                    ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          patient["name"],
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 29, 6, 229),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color.fromARGB(255, 29, 6, 229),
+                              ),
+                              padding: EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.calendar_today,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Data:",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                Text(
+                                  "${patient['date'].day} de ${_getMonthName(patient['date'].month)}, ${patient['date'].year}",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Color.fromARGB(255, 29, 6, 229),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color.fromARGB(255, 29, 6, 229),
+                              ),
+                              padding: EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.access_time,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Horário:",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                Text(
+                                  patient["time"],
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Color.fromARGB(255, 29, 6, 229),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ]),
       ),
     );
   }
-}
 
-class EditAppointmentScreen extends StatelessWidget {
-  final Map<String, dynamic> appointmentData;
-
-  const EditAppointmentScreen({required this.appointmentData});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Editar Horário'),
-        backgroundColor: Colors.blue,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Data: ${appointmentData['data']}'),
-            Text('Hora Início: ${appointmentData['horaInicio']}'),
-            Text('Hora Fim: ${appointmentData['horaFim']}'),
-            // Adicione campos de edição aqui, se necessário
-          ],
-        ),
-      ),
-    );
+  String _getMonthName(int month) {
+    final ptBrLocale = Locale('pt', 'BR');
+    initializeDateFormatting(ptBrLocale.toString());
+    return DateFormat.MMMM(ptBrLocale.toString())
+        .format(DateTime(DateTime.now().year, month));
   }
 }

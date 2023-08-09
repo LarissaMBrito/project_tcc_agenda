@@ -5,14 +5,15 @@ class HomeScreenPatient extends StatelessWidget {
   final List<Map<String, dynamic>> _especialidades = [
     {"nome": "Ginecologista", "imagem": "images/ginecologista.jpeg"},
     {"nome": "Pediatra", "imagem": "images/pediatra.jpeg"},
-    {"nome": "Cardiologista", "imagem": "images/cardiologista.jpeg"},
+    {"nome": "Pneumologista", "imagem": "images/pneumologista.jpeg"},
+    {"nome": "Oncologista", "imagem": "images/oncologista.jpeg"},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Bem-Vindo"),
+        title: Text("Especialidades"),
         backgroundColor: const Color.fromARGB(255, 29, 6, 229),
       ),
       body: SingleChildScrollView(
@@ -34,7 +35,7 @@ class HomeScreenPatient extends StatelessWidget {
                   ),
                   CircleAvatar(
                     radius: 25,
-                    backgroundImage: AssetImage("images/medico.jpg"),
+                    backgroundImage: AssetImage("images/image.jpg"),
                   ),
                 ],
               ),

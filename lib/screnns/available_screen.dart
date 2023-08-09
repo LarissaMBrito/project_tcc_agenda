@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 void main() {
   runApp(EventApp());
@@ -10,284 +9,128 @@ class EventApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Aplicativo de Eventos',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: EventScreen(),
+      title: 'Event App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: AppointmentScheduler(),
     );
   }
 }
 
-class EventScreen extends StatefulWidget {
+class AppointmentScheduler extends StatefulWidget {
   @override
-  _EventScreenState createState() => _EventScreenState();
+  _AppointmentSchedulerState createState() => _AppointmentSchedulerState();
 }
 
-class _EventScreenState extends State<EventScreen> {
-  DateTime? selectedDate;
-  TimeOfDay? startTime;
-  TimeOfDay? endTime;
-
-  String getFormattedDate(DateTime? date) {
-    return date != null
-        ? DateFormat('dd/MM/yyyy').format(date)
-        : 'Selecionar Data';
-  }
-
-  String? getFormattedTime(TimeOfDay? time) {
-    return time != null ? time.format(context) : null;
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Sucesso'),
-          content: Text('Dados cadastrados com sucesso'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Fechar o AlertDialog
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _saveEventData() async {
-    if (selectedDate != null && startTime != null && endTime != null) {
-      try {
-        final firestore = FirebaseFirestore.instance;
-        final formattedDate = DateFormat('dd/MM/yyyy')
-            .format(selectedDate!); // Formata a data como 'dd/MM/yyyy'
-        await firestore.collection('disponibilizar').add({
-          'data': formattedDate,
-          'horaInicio': getFormattedTime(startTime),
-          'horaFim': getFormattedTime(endTime),
-        });
-
-        print(
-            'Dados salvos: Data: $formattedDate, Hora de Início: ${getFormattedTime(startTime)}, Hora de Término: ${getFormattedTime(endTime)}');
-
-        // Exibir o AlertDialog de sucesso
-        _showSuccessDialog();
-      } catch (error) {
-        print('Erro ao salvar os dados: $error');
-      }
-    } else {
-      print('Preencha todos os campos antes de salvar.');
-    }
-  }
+class _AppointmentSchedulerState extends State<AppointmentScheduler> {
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _selectedDay = DateTime.now();
+  DateTime _focusedDay = DateTime.now();
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detalhes do Evento'),
+        title: Text('Disponibilizar Data/Hora Atendimento'),
         backgroundColor: Color.fromARGB(255, 29, 6, 229),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            GestureDetector(
-              onTap: () => _selectDate(context),
-              child: Container(
-                padding: EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today),
-                    SizedBox(width: 8),
-                    Text(
-                      getFormattedDate(selectedDate),
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildTimeColumn(
-                  'Hora de Início',
-                  startTime,
-                  (TimeOfDay time) => setState(() {
-                    startTime = time;
-                  }),
-                ),
-                _buildTimeColumn(
-                  'Hora de Término',
-                  endTime,
-                  (TimeOfDay time) => setState(() {
-                    endTime = time;
-                  }),
-                ),
-              ],
-            ),
-            SizedBox(height: 30),
-            Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Data Selecionada:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    getFormattedDate(selectedDate),
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.access_time, size: 20),
-                      SizedBox(width: 5),
-                      Text(
-                        'Hora de Início:',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        getFormattedTime(startTime) ?? 'Selecione hora',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.access_time, size: 20),
-                      SizedBox(width: 5),
-                      Text(
-                        'Hora de Término:',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        getFormattedTime(endTime) ?? 'Selecione hora',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Spacer(),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 16, bottom: 16),
-                child: FloatingActionButton(
-                  onPressed: _saveEventData,
-                  backgroundColor: Color.fromARGB(255, 29, 6, 229),
-                  child: Icon(Icons.save),
-                ),
-              ),
-            ),
-          ],
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
         ),
       ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TableCalendar(
+                firstDay: DateTime.utc(2023, 1, 1),
+                lastDay: DateTime.utc(2023, 12, 31),
+                focusedDay: _focusedDay,
+                calendarFormat: _calendarFormat,
+                onFormatChanged: (format) {
+                  setState(() {
+                    _calendarFormat = format;
+                  });
+                },
+                selectedDayPredicate: (day) {
+                  return isSameDay(_selectedDay, day);
+                },
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                },
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                ),
+              ),
+              SizedBox(height: 20),
+              _buildTimePicker("Hora de Início", _startTime),
+              SizedBox(height: 20),
+              _buildTimePicker("Hora de Término", _endTime),
+              SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (_startTime != null && _endTime != null)
+            ? () {
+                // Lógica para salvar o agendamento
+                print("Agendamento realizado:");
+                print("Hora Início: ${_startTime!.format(context)}");
+                print("Hora Término: ${_endTime!.format(context)}");
+              }
+            : null,
+        child: Icon(Icons.save),
+        backgroundColor: Color.fromARGB(255, 29, 6, 229),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  // ... Restante do código ...
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-      });
-    }
-  }
-
-  Column _buildTimeColumn(
-    String label,
-    TimeOfDay? time,
-    void Function(TimeOfDay) onTimeSelected,
-  ) {
-    return Column(
+  Widget _buildTimePicker(String label, TimeOfDay? time) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label),
-        GestureDetector(
-          onTap: () =>
-              _selectTime(context, time ?? TimeOfDay.now(), onTimeSelected),
-          child: Container(
-            padding: EdgeInsets.all(12.0),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(5.0),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.access_time),
-                SizedBox(width: 8),
-                Text(
-                  getFormattedTime(time) ?? 'Selecione hora',
-                  style: TextStyle(fontSize: 15),
-                ),
-              ],
-            ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            primary: Color.fromARGB(255, 29, 6, 229),
+            padding: EdgeInsets.symmetric(horizontal: 10),
           ),
+          onPressed: () async {
+            TimeOfDay? pickedTime = await showTimePicker(
+              context: context,
+              initialTime: time ?? TimeOfDay.now(),
+              builder: (BuildContext context, Widget? child) {
+                return MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(alwaysUse24HourFormat: true),
+                  child: child!,
+                );
+              },
+            );
+
+            if (pickedTime != null) {
+              setState(() {
+                if (label == "Hora de Início") {
+                  _startTime = pickedTime;
+                } else {
+                  _endTime = pickedTime;
+                }
+              });
+            }
+          },
+          child: Text(time != null ? time.format(context) : "Selecionar"),
         ),
       ],
     );
-  }
-
-  Future<void> _selectTime(
-    BuildContext context,
-    TimeOfDay initialTime,
-    Function(TimeOfDay) onTimeSelected,
-  ) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-    );
-    if (picked != null) {
-      setState(() {
-        onTimeSelected(picked);
-      });
-    }
   }
 }

@@ -172,7 +172,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Médico Cardiologista",
+                                    "Pneumologista",
                                     style: TextStyle(
                                       fontSize: 18,
                                       color: Color.fromARGB(255, 29, 6, 229),
@@ -195,46 +195,31 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                SizedBox(height: 10),
+                                Text(
+                                  "Endereço de Atendimento:",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                Text(
+                                  "AV.WALTER ANTONIO N: 512",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Color.fromARGB(255, 29, 6, 229),
+                                  ),
+                                ),
                                 SizedBox(height: 20),
                                 Text(
-                                  "Nome da Clínica:",
+                                  "Cidade:",
                                   style: TextStyle(
                                     fontSize: 18,
                                     color: Colors.black,
                                   ),
                                 ),
                                 Text(
-                                  "BEM MAIS SAUDE",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Color.fromARGB(255, 29, 6, 229),
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  "Localização:",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                Text(
-                                  "AV.WALTER ANTONIO 512, ASSIS - SP",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Color.fromARGB(255, 29, 6, 229),
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  "CRM:",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                Text(
-                                  "595884",
+                                  "ASSIS - SP",
                                   style: TextStyle(
                                     fontSize: 18,
                                     color: Color.fromARGB(255, 29, 6, 229),

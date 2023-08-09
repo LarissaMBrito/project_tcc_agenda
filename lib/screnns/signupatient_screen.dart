@@ -21,6 +21,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
   final _cpfControoler = TextEditingController();
   final _crmControoler = TextEditingController();
   final _enderecoControoler = TextEditingController();
+  final _cidadeControoler = TextEditingController();
   final _especialidadeControoler = TextEditingController();
   final _senhaControoler = TextEditingController();
   final _firebaseAuth = FirebaseAuth.instance;
@@ -189,6 +190,15 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                           ),
                           SizedBox(height: 15),
                           TextField(
+                            controller: _cidadeControoler,
+                            decoration: InputDecoration(
+                              labelText: "Cidade de Atendimento",
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.location_on),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
                             controller: _especialidadeControoler,
                             decoration: InputDecoration(
                               labelText: "Especialidade",
@@ -230,7 +240,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                           ),
                           SizedBox(height: 15),
                           Padding(
-                            padding: EdgeInsets.all(12),
+                            padding: EdgeInsets.all(1),
                             child: TextField(
                               controller: _senhaControoler,
                               obscureText: passToggle,
@@ -255,7 +265,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                           ),
                         ],
                       ),
-                SizedBox(height: 20),
+                SizedBox(height: 3),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15),
                   child: Row(
@@ -299,7 +309,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 6),
                 Material(
                   color: Color.fromARGB(255, 29, 6, 229),
                   borderRadius: BorderRadius.circular(10),
@@ -319,12 +329,12 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                     },
                     child: Padding(
                       padding:
-                          EdgeInsets.symmetric(vertical: 15, horizontal: 57),
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 50),
                       child: Text(
                         "Cadastrar",
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 22,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

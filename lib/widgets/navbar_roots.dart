@@ -12,7 +12,9 @@ class _NavBarRootsState extends State<NavBarRoots> {
   int _selectedIndex = 0;
   final _screens = [
     HomeScreenPatient(),
-    ScheduleScreen(),
+    ScheduleScreen(
+      especialidade: '',
+    ),
     SettingScreen(),
   ];
 

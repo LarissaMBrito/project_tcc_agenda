@@ -14,6 +14,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
   bool passToggle = true;
   bool _isConsentGiven = false;
   String? _selectedUserType;
+  String? _selectedSpecialty; // Add this variable
 
   final _nomeControoler = TextEditingController();
   final _emailControler = TextEditingController();
@@ -22,13 +23,37 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
   final _crmControoler = TextEditingController();
   final _enderecoControoler = TextEditingController();
   final _cidadeControoler = TextEditingController();
-  final _especialidadeControoler = TextEditingController();
+  //final _especialidadeControoler = TextEditingController();
   final _senhaControoler = TextEditingController();
   final _firebaseAuth = FirebaseAuth.instance;
 
   final _nomeCompletoAdminControoler = TextEditingController();
   final _cpfAdminController = TextEditingController();
   final _telefoneAdminController = TextEditingController();
+
+  List<String> _specialties = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSpecialties(); // Load specialties when the screen initializes
+  }
+
+  Future<void> _loadSpecialties() async {
+    try {
+      QuerySnapshot specialtiesSnapshot =
+          await FirebaseFirestore.instance.collection('especialidades').get();
+
+      List<String> specialtiesList =
+          specialtiesSnapshot.docs.map((doc) => doc['nome'] as String).toList();
+
+      setState(() {
+        _specialties = specialtiesList;
+      });
+    } catch (e) {
+      print('Error loading specialties: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +157,15 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                       ),
                       SizedBox(height: 15),
                       TextField(
+                        controller: _telefoneControoler,
+                        decoration: InputDecoration(
+                          labelText: "Telefone",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.phone),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
                         controller: _enderecoControoler,
                         decoration: InputDecoration(
                           labelText: "Endereço de Atendimento",
@@ -149,13 +183,24 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                         ),
                       ),
                       SizedBox(height: 15),
-                      TextField(
-                        controller: _especialidadeControoler,
+                      DropdownButtonFormField<String>(
+                        value: _selectedSpecialty,
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedSpecialty = newValue;
+                          });
+                        },
                         decoration: InputDecoration(
-                          labelText: "Especialidade",
                           border: OutlineInputBorder(),
+                          labelText: "Especialidades",
                           prefixIcon: Icon(Icons.category),
                         ),
+                        items: _specialties.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
                       ),
                     ],
                   )
@@ -385,7 +430,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
         userData['cpf'] = _cpfControoler.text;
         userData['crm'] = _crmControoler.text;
         userData['endereco'] = _enderecoControoler.text;
-        userData['especialidade'] = _especialidadeControoler.text;
+        userData['especialidade'] = _selectedSpecialty;
       } else if (_selectedUserType == "Paciente") {
         tipoUsuario = "paciente";
         userData['nome'] = _nomeControoler.text;

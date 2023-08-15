@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:project_tcc_agend/screnns/calendar_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ScheduleScreen extends StatefulWidget {
-  const ScheduleScreen({Key? key}) : super(key: key);
+  final String especialidade;
+
+  const ScheduleScreen({Key? key, required this.especialidade})
+      : super(key: key);
 
   @override
   State<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -32,7 +35,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Campo de pesquisa
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 child: TextField(
@@ -145,7 +147,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
               ),
               SizedBox(height: 30),
-              // Updated section to display doctor's information with ExpansionPanelList
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 15),
                 child: Column(
@@ -162,98 +163,109 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         ExpansionPanel(
                           isExpanded: _isDoctorDetailsExpanded,
                           headerBuilder: (context, isExpanded) {
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage:
-                                    AssetImage("images/medico.jpg"),
-                                radius: 24,
-                              ),
-                              title: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Pneumologista",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(255, 29, 6, 229),
+                            return StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('medico')
+                                  .where('especialidades',
+                                      isEqualTo: widget.especialidade)
+                                  .limit(
+                                      1) // Limitando a um médico para essa especialidade
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return CircularProgressIndicator();
+                                } else if (snapshot.hasError) {
+                                  return Text('Erro: ${snapshot.error}');
+                                } else if (!snapshot.hasData ||
+                                    snapshot.data!.docs.isEmpty) {
+                                  return Text('Nenhum médico encontrado.');
+                                } else {
+                                  final doctor = snapshot.data!.docs[0];
+                                  final doctorData =
+                                      doctor.data() as Map<String, dynamic>;
+                                  return ListTile(
+                                    title: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          widget.especialidade,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            color:
+                                                Color.fromARGB(255, 29, 6, 229),
+                                          ),
+                                        ),
+                                        Text(
+                                          doctorData[
+                                              'nome'], // Nome do médico do Firestore
+                                          style: TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                                Color.fromARGB(255, 29, 6, 229),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  Text(
-                                    "João Carlos Brito",
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color.fromARGB(255, 29, 6, 229),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                  );
+                                }
+                              },
                             );
                           },
                           body: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 10),
-                                Text(
-                                  "Endereço de Atendimento:",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                Text(
-                                  "AV.WALTER ANTONIO N: 512",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Color.fromARGB(255, 29, 6, 229),
-                                  ),
-                                ),
-                                SizedBox(height: 20),
-                                Text(
-                                  "Cidade:",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                Text(
-                                  "ASSIS - SP",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Color.fromARGB(255, 29, 6, 229),
-                                  ),
-                                ),
-                                SizedBox(height: 20),
-                                Material(
-                                  color: Color.fromARGB(255, 29, 6, 229),
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              CalendarScreen(),
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('disponibilizar')
+                                  .where('especialidades',
+                                      isEqualTo: widget.especialidade)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return CircularProgressIndicator();
+                                } else if (snapshot.hasError) {
+                                  return Text('Erro: ${snapshot.error}');
+                                } else if (!snapshot.hasData ||
+                                    snapshot.data!.docs.isEmpty) {
+                                  return Text(
+                                      'Nenhuma disponibilidade encontrada.');
+                                } else {
+                                  final disponibilidades = snapshot.data!.docs;
+                                  return Column(
+                                    children:
+                                        disponibilidades.map((disponibilidade) {
+                                      final data = disponibilidade.data()
+                                          as Map<String, dynamic>;
+                                      final startTime = data['start_time'];
+                                      final endTime = data['end_time'];
+                                      final date = data['date'].toDate();
+                                      final doctorName =
+                                          data['nome']; // Nome do médico
+                                      final doctorSpecialty = data[
+                                          'especialidades']; // Especialidades do médico
+
+                                      return ListTile(
+                                        title: Text(
+                                            "Data: ${date.day}/${date.month}/${date.year}"),
+                                        subtitle: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                                "Horário: $startTime - $endTime"),
+                                            Text("Médico: $doctorName"),
+                                            Text(
+                                                "Especialidades: $doctorSpecialty"), // Note o plural "Especialidades"
+                                          ],
                                         ),
                                       );
-                                    },
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 10, horizontal: 50),
-                                      child: Text(
-                                        "Ver disponibilidade",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                    }).toList(),
+                                  );
+                                }
+                              },
                             ),
                           ),
                         ),
@@ -262,7 +274,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: 30),
               _scheduleWidgets[_buttonIndex],
             ],
           ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'package:project_tcc_agend/screens/calendar_screen.dart';
+import 'package:project_tcc_agend/screnns/schedule_screen.dart';
 
 class HomeScreenPatient extends StatelessWidget {
   @override
@@ -24,9 +26,6 @@ class HomeScreenPatient extends StatelessWidget {
               final data = doc.data() as Map<String, dynamic>;
               final nomeEspecialidade = data["nome"];
               final imageUrl = data["imageUrl"] as String?;
-
-              print("Nome da especialidade: $nomeEspecialidade");
-              print("URL da imagem: $imageUrl");
 
               especialidades.add({
                 "nome": nomeEspecialidade,
@@ -96,30 +95,42 @@ class HomeScreenPatient extends StatelessWidget {
                     itemCount: especialidades.length,
                     itemBuilder: (context, index) {
                       final especialidade = especialidades[index];
-                      return Card(
-                        color: Color.fromARGB(255, 201, 200, 207),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.network(
-                              especialidade["imagem"],
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center,
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              especialidade["nome"],
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ScheduleScreen(
+                                especialidade: especialidade["nome"],
                               ),
                             ),
-                          ],
+                          );
+                        },
+                        child: Card(
+                          color: Color.fromARGB(255, 201, 200, 207),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.network(
+                                especialidade["imagem"],
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                                alignment: Alignment.center,
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                especialidade["nome"],
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },

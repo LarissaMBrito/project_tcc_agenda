@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_tcc_agend/screnns/signupatient_screen.dart';
+import 'package:project_tcc_agend/screnns/specialty_screen.dart';
 
 import '../widgets/navbar_roots.dart';
 import '../widgets/navbar_roots_med.dart';
@@ -36,6 +37,14 @@ class _LoginScreenState extends State<LoginScreen> {
             .get();
         if (docSnapshotPaciente.exists) {
           tipoUsuario = "paciente";
+        } else {
+          DocumentSnapshot docSnapshotAdmin = await FirebaseFirestore.instance
+              .collection('administrador')
+              .doc(uid)
+              .get();
+          if (docSnapshotAdmin.exists) {
+            tipoUsuario = "administrador";
+          }
         }
       }
     } catch (e) {
@@ -188,6 +197,11 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => NavBarRoots()),
+          );
+        } else if (tipoUsuario == "administrador") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SpecialtyScreen()),
           );
         } else {
           _showAlertDialog('Tipo de usuário desconhecido.');

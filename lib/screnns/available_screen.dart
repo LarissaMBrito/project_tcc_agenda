@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   runApp(EventApp());
@@ -81,11 +82,18 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: (_startTime != null && _endTime != null)
-            ? () {
-                // Lógica para salvar o agendamento
-                print("Agendamento realizado:");
-                print("Hora Início: ${_startTime!.format(context)}");
-                print("Hora Término: ${_endTime!.format(context)}");
+            ? () async {
+                CollectionReference disponbilizarCollection =
+                    FirebaseFirestore.instance.collection('disponbilizar');
+                await disponbilizarCollection.add({
+                  'start_time': _startTime!.format(context),
+                  'end_time':
+                      _endTime!.format(context), // Formatar hora de término
+                  'date': _selectedDay,
+                  'timestamp': FieldValue.serverTimestamp(),
+                });
+
+                _showConfirmationDialog(); // Mostrar o diálogo de confirmação
               }
             : null,
         child: Icon(Icons.save),
@@ -96,6 +104,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   }
 
   Widget _buildTimePicker(String label, TimeOfDay? time) {
+    String formattedTime = time != null ? time.format(context) : "Selecionar";
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -128,9 +138,29 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
               });
             }
           },
-          child: Text(time != null ? time.format(context) : "Selecionar"),
+          child: Text(formattedTime), // Use the formattedTime here
         ),
       ],
+    );
+  }
+
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Agendamento Salvo'),
+          content: Text('O agendamento foi salvo com sucesso.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fechar o diálogo
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

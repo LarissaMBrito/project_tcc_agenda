@@ -1,5 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_tcc_agend/screnns/calendar_screen.dart';
+
+class DoctorInfo {
+  final String name;
+  final String specialty;
+  final String address;
+  final String city;
+
+  DoctorInfo({
+    required this.name,
+    required this.specialty,
+    required this.address,
+    required this.city,
+  });
+}
 
 class ScheduleScreen extends StatefulWidget {
   final String especialidade;
@@ -13,14 +28,9 @@ class ScheduleScreen extends StatefulWidget {
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
   int _buttonIndex = 0;
-  bool _isDoctorDetailsExpanded = false;
-
-  final _scheduleWidgets = [
-    Container(),
-    Container(),
-    Container(),
-    Container(),
-  ];
+  //bool _isDoctorDetailsExpanded = false;
+  late String doctorName = "No doctors found";
+  late String doctorSpecialty = "";
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +56,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     ),
                   ),
                   onChanged: (text) {
-                    // Implemente sua lógica de pesquisa aqui
-                    // Você pode atualizar os dados exibidos com base no texto de pesquisa
+                    // Implement your search logic here
                   },
                 ),
               ),
@@ -78,7 +87,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          "Disponível",
+                          "Disponivel",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -132,7 +141,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          "Cancelado",
+                          "Cencelado",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -147,138 +156,196 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
               ),
               SizedBox(height: 30),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 15),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ExpansionPanelList(
-                      expandedHeaderPadding: EdgeInsets.zero,
-                      expansionCallback: (panelIndex, isExpanded) {
-                        setState(() {
-                          _isDoctorDetailsExpanded = !isExpanded;
-                        });
-                      },
-                      children: [
-                        ExpansionPanel(
-                          isExpanded: _isDoctorDetailsExpanded,
-                          headerBuilder: (context, isExpanded) {
-                            return StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('medico')
-                                  .where('especialidades',
-                                      isEqualTo: widget.especialidade)
-                                  .limit(
-                                      1) // Limitando a um médico para essa especialidade
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return CircularProgressIndicator();
-                                } else if (snapshot.hasError) {
-                                  return Text('Erro: ${snapshot.error}');
-                                } else if (!snapshot.hasData ||
-                                    snapshot.data!.docs.isEmpty) {
-                                  return Text('Nenhum médico encontrado.');
-                                } else {
-                                  final doctor = snapshot.data!.docs[0];
-                                  final doctorData =
-                                      doctor.data() as Map<String, dynamic>;
-                                  return ListTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.especialidade,
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            color:
-                                                Color.fromARGB(255, 29, 6, 229),
-                                          ),
-                                        ),
-                                        Text(
-                                          doctorData[
-                                              'nome'], // Nome do médico do Firestore
-                                          style: TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.bold,
-                                            color:
-                                                Color.fromARGB(255, 29, 6, 229),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                              },
-                            );
-                          },
-                          body: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('disponibilizar')
-                                  .where('especialidades',
-                                      isEqualTo: widget.especialidade)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return CircularProgressIndicator();
-                                } else if (snapshot.hasError) {
-                                  return Text('Erro: ${snapshot.error}');
-                                } else if (!snapshot.hasData ||
-                                    snapshot.data!.docs.isEmpty) {
-                                  return Text(
-                                      'Nenhuma disponibilidade encontrada.');
-                                } else {
-                                  final disponibilidades = snapshot.data!.docs;
-                                  return Column(
-                                    children:
-                                        disponibilidades.map((disponibilidade) {
-                                      final data = disponibilidade.data()
-                                          as Map<String, dynamic>;
-                                      final startTime = data['start_time'];
-                                      final endTime = data['end_time'];
-                                      final date = data['date'].toDate();
-                                      final doctorName =
-                                          data['nome']; // Nome do médico
-                                      final doctorSpecialty = data[
-                                          'especialidades']; // Especialidades do médico
-
-                                      return ListTile(
-                                        title: Text(
-                                            "Data: ${date.day}/${date.month}/${date.year}"),
-                                        subtitle: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                                "Horário: $startTime - $endTime"),
-                                            Text("Médico: $doctorName"),
-                                            Text(
-                                                "Especialidades: $doctorSpecialty"), // Note o plural "Especialidades"
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              _scheduleWidgets[_buttonIndex],
+              _buildDoctorHeader(), // Mostrar nome e especialidade do médico
+              _buildDoctorBody(), // Mostrar lista de médicos
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDoctorHeader() {
+    final especialidade = widget.especialidade;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('medico')
+          .where('especialidades', isEqualTo: especialidade)
+          .limit(1)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+          final doctor = snapshot.data!.docs[0];
+          final doctorData = doctor.data() as Map<String, dynamic>;
+          doctorName = doctorData['nome'];
+          doctorSpecialty = doctorData['especialidades'];
+
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Name: $doctorName',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Color.fromARGB(255, 29, 6, 229),
+                  ),
+                ),
+                Text(
+                  'Specialty: $doctorSpecialty',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromARGB(255, 29, 6, 229),
+                  ),
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => CalendarScreen(
+                              doctorName: doctorName,
+                              doctorSpecialty: doctorSpecialty)),
+                    );
+                  },
+                  child: Text("Ver Disponibilidade"),
+                ),
+              ],
+            ),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
+  }
+
+  Widget _buildDoctorBody() {
+    final especialidade = widget.especialidade;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('disponibilizar')
+          .where('especialidades', isEqualTo: especialidade)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+          final doctorDocs = snapshot.data!.docs;
+
+          // Group doctors by name
+          Map<String, List<DocumentSnapshot>> doctorsByName = {};
+          for (var doctor in doctorDocs) {
+            final doctorData = doctor.data() as Map<String, dynamic>;
+            String doctorName = doctorData['nome'] ?? "Nome desconhecido";
+            if (!doctorsByName.containsKey(doctorName)) {
+              doctorsByName[doctorName] = [];
+            }
+            doctorsByName[doctorName]!.add(doctor);
+          }
+
+          // Create DoctorInfo objects
+          List<DoctorInfo> doctorInfos = [];
+          for (var doctorName in doctorsByName.keys) {
+            final doctorData =
+                doctorsByName[doctorName]![0].data() as Map<String, dynamic>;
+            String doctorSpecialty = especialidade;
+            String doctorAddress =
+                doctorData['endereco'] ?? "Endereço desconhecido";
+            String doctorCity = doctorData['cidade'] ?? "Cidade desconhecida";
+
+            doctorInfos.add(DoctorInfo(
+              name: doctorName,
+              specialty: doctorSpecialty,
+              address: doctorAddress,
+              city: doctorCity,
+            ));
+          }
+
+          return Column(
+            children: doctorInfos.map((doctorInfo) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    title: Text(
+                      doctorInfo.name,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 29, 6, 229),
+                      ),
+                    ),
+                    subtitle: Text(
+                      doctorInfo.specialty,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Color.fromARGB(255, 29, 6, 229),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CalendarScreen(
+                              doctorName: doctorInfo.name,
+                              doctorSpecialty: doctorInfo.specialty,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        primary: Color.fromARGB(255, 29, 6, 229),
+                      ),
+                      child: Text("Ver Disponibilidade"),
+                    ),
+                  ),
+                  ExpansionTile(
+                    title: Text('Endereço de Atendimento'),
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.location_on),
+                        title: Text(
+                          doctorInfo.address,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromARGB(255, 29, 6, 229),
+                          ),
+                        ),
+                        subtitle: Text(
+                          doctorInfo.city,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromARGB(255, 29, 6, 229),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Divider(),
+                ],
+              );
+            }).toList(),
+          );
+        } else {
+          return Container();
+        }
+      },
     );
   }
 }

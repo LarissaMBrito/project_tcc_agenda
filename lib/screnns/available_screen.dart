@@ -33,6 +33,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   late User _user;
   String _selectedDoctorName = '';
   String _selectedSpecialty = '';
+  String _selectedCity = '';
+  String _selectedEnd = '';
 
   List<Map<String, dynamic>> _availableDoctors = [];
 
@@ -53,6 +55,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
         setState(() {
           _selectedDoctorName = doctorSnapshot['nome'];
           _selectedSpecialty = doctorSnapshot['especialidade'];
+          _selectedCity = doctorSnapshot['cidade'];
+          _selectedEnd = doctorSnapshot['endereco'];
         });
         _fetchAvailableDoctors(); // Adicione esta linha para buscar médicos disponíveis após obter as informações do médico
       }
@@ -217,6 +221,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                   'timestamp': FieldValue.serverTimestamp(),
                   'nome': _selectedDoctorName,
                   'especialidades': _selectedSpecialty,
+                  'cidade': _selectedCity,
+                  'endereco': _selectedEnd,
                   'user_id': _user.uid,
                 });
 

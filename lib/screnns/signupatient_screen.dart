@@ -430,6 +430,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
         userData['cpf'] = _cpfControoler.text;
         userData['crm'] = _crmControoler.text;
         userData['endereco'] = _enderecoControoler.text;
+        userData['cidade'] = _cidadeControoler.text;
         userData['especialidade'] = _selectedSpecialty;
       } else if (_selectedUserType == "Paciente") {
         tipoUsuario = "paciente";

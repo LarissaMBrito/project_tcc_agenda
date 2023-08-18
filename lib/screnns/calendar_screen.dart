@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -17,6 +18,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  TimeOfDay? selectedEndTime;
 
   Future<List<Map<String, dynamic>>> getAvailableSlots() async {
     QuerySnapshot querySnapshot = await _firestore
@@ -47,20 +49,43 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return slots;
   }
 
-  void _saveAppointment(DateTime date, TimeOfDay time) async {
-    final appointmentDateTime = DateTime(
+  void _saveAppointment(
+      DateTime date, TimeOfDay startTime, TimeOfDay endTime) async {
+    final startDateTime = DateTime(
       date.year,
       date.month,
       date.day,
-      time.hour,
-      time.minute,
+      startTime.hour,
+      startTime.minute,
+    );
+
+    // ignore: unused_local_variable
+    final endDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      endTime.hour,
+      endTime.minute,
     );
 
     try {
+      // Obter o nome do usuário logado da coleção "paciente"
+      String? userUID = FirebaseAuth.instance.currentUser?.uid;
+
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('paciente')
+          .doc(userUID)
+          .get();
+
+      String userName = userSnapshot['nome'];
+
+      // Restante do código para salvar o agendamento
       await FirebaseFirestore.instance.collection('agendar').add({
         'doctorName': widget.doctorName,
-        'appointmentDateTime': appointmentDateTime,
-        // Adicione outros campos relevantes para o agendamento...
+        'data': startDateTime,
+        'horaInicio': startTime.format(context),
+        'horaTermino': endTime.format(context),
+        'usuarioAgendou': userName, // Adicionar o nome do usuário que agendou
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,8 +95,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       setState(() {
         selectedDate = null;
         selectedTime = null;
+        selectedEndTime = null;
       });
     } catch (e) {
+      // Tratamento de erro
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao agendar: $e')),
       );
@@ -155,15 +182,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               onTap: () {
                                 setState(() {
                                   selectedDate = data['date'].toDate();
-                                  selectedTime =
-                                      TimeOfDay.fromDateTime(startTime);
+                                  final startTimeComponents =
+                                      startTime.split(':');
+                                  final endTimeComponents = endTime.split(':');
+                                  final int startHour =
+                                      int.parse(startTimeComponents[0]);
+                                  final int startMinute =
+                                      int.parse(startTimeComponents[1]);
+                                  final int endHour =
+                                      int.parse(endTimeComponents[0]);
+                                  final int endMinute =
+                                      int.parse(endTimeComponents[1]);
+
+                                  selectedTime = TimeOfDay(
+                                      hour: startHour, minute: startMinute);
+                                  selectedEndTime = TimeOfDay(
+                                      hour: endHour, minute: endMinute);
                                 });
                               },
                             );
                           }).toList(),
                         ),
-                        if (selectedDate != null && selectedTime != null) ...[
-                          SizedBox(height: 20),
+                        SizedBox(height: 20),
+                        if (selectedDate != null) ...[
                           Text(
                             'Horário Selecionado:',
                             style: TextStyle(
@@ -172,12 +213,44 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                           ),
                           Text(
-                            '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year} ${selectedTime!.hour}:${selectedTime!.minute}',
+                            'Data: ${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                             style: TextStyle(
                               fontSize: 16,
                             ),
                           ),
                         ],
+                        if (selectedTime != null &&
+                            selectedEndTime != null) ...[
+                          Text(
+                            'Início: ${selectedTime!.hour}:${selectedTime!.minute}',
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            'Término: ${selectedEndTime!.hour}:${selectedEndTime!.minute}',
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                        SizedBox(height: 20),
+                        Positioned(
+                          bottom: 100,
+                          right: 100,
+                          child: FloatingActionButton(
+                            onPressed: () {
+                              if (selectedDate != null &&
+                                  selectedTime != null &&
+                                  selectedEndTime != null) {
+                                _saveAppointment(selectedDate!, selectedTime!,
+                                    selectedEndTime!);
+                              }
+                            },
+                            child: Icon(Icons.save),
+                            backgroundColor: Color.fromARGB(255, 29, 6, 229),
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -185,23 +258,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               },
             ),
           ),
-          if (selectedDate != null && selectedTime != null)
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: FloatingActionButton(
-                  onPressed: () {
-                    if (selectedDate != null && selectedTime != null) {
-                      _saveAppointment(selectedDate!, selectedTime!);
-                    }
-                  },
-                  child: Icon(Icons.save),
-                  backgroundColor: Color.fromARGB(255, 29, 6, 229),
-                ),
-              ),
-            ),
         ],
       ),
     );

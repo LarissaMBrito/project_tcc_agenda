@@ -141,7 +141,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          "Cencelado",
+                          "Cancelado",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -230,122 +230,126 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Widget _buildDoctorBody() {
     final especialidade = widget.especialidade;
+    if (_buttonIndex == 0) {
+      // Verifica se o botão "Disponível" está selecionado
+      return StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('disponibilizar')
+            .where('especialidades', isEqualTo: especialidade)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+            final doctorDocs = snapshot.data!.docs;
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('disponibilizar')
-          .where('especialidades', isEqualTo: especialidade)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-          final doctorDocs = snapshot.data!.docs;
-
-          // Group doctors by name
-          Map<String, List<DocumentSnapshot>> doctorsByName = {};
-          for (var doctor in doctorDocs) {
-            final doctorData = doctor.data() as Map<String, dynamic>;
-            String doctorName = doctorData['nome'] ?? "Nome desconhecido";
-            if (!doctorsByName.containsKey(doctorName)) {
-              doctorsByName[doctorName] = [];
+            // Group doctors by name
+            Map<String, List<DocumentSnapshot>> doctorsByName = {};
+            for (var doctor in doctorDocs) {
+              final doctorData = doctor.data() as Map<String, dynamic>;
+              String doctorName = doctorData['nome'] ?? "Nome desconhecido";
+              if (!doctorsByName.containsKey(doctorName)) {
+                doctorsByName[doctorName] = [];
+              }
+              doctorsByName[doctorName]!.add(doctor);
             }
-            doctorsByName[doctorName]!.add(doctor);
-          }
 
-          // Create DoctorInfo objects
-          List<DoctorInfo> doctorInfos = [];
-          for (var doctorName in doctorsByName.keys) {
-            final doctorData =
-                doctorsByName[doctorName]![0].data() as Map<String, dynamic>;
-            String doctorSpecialty = especialidade;
-            String doctorAddress =
-                doctorData['endereco'] ?? "Endereço desconhecido";
-            String doctorCity = doctorData['cidade'] ?? "Cidade desconhecida";
+            // Create DoctorInfo objects
+            List<DoctorInfo> doctorInfos = [];
+            for (var doctorName in doctorsByName.keys) {
+              final doctorData =
+                  doctorsByName[doctorName]![0].data() as Map<String, dynamic>;
+              String doctorSpecialty = especialidade;
+              String doctorAddress =
+                  doctorData['endereco'] ?? "Endereço desconhecido";
+              String doctorCity = doctorData['cidade'] ?? "Cidade desconhecida";
 
-            doctorInfos.add(DoctorInfo(
-              name: doctorName,
-              specialty: doctorSpecialty,
-              address: doctorAddress,
-              city: doctorCity,
-            ));
-          }
+              doctorInfos.add(DoctorInfo(
+                name: doctorName,
+                specialty: doctorSpecialty,
+                address: doctorAddress,
+                city: doctorCity,
+              ));
+            }
 
-          return Column(
-            children: doctorInfos.map((doctorInfo) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                    title: Text(
-                      doctorInfo.name,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 29, 6, 229),
+            return Column(
+              children: doctorInfos.map((doctorInfo) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      title: Text(
+                        doctorInfo.name,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                      ),
+                      subtitle: Text(
+                        doctorInfo.specialty,
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
                       ),
                     ),
-                    subtitle: Text(
-                      doctorInfo.specialty,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Color.fromARGB(255, 29, 6, 229),
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CalendarScreen(
+                                doctorName: doctorInfo.name,
+                                doctorSpecialty: doctorInfo.specialty,
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          primary: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                        child: Text("Ver Disponibilidade"),
                       ),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.topCenter,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CalendarScreen(
-                              doctorName: doctorInfo.name,
-                              doctorSpecialty: doctorInfo.specialty,
+                    ExpansionTile(
+                      title: Text('Endereço de Atendimento'),
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.location_on),
+                          title: Text(
+                            doctorInfo.address,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromARGB(255, 29, 6, 229),
                             ),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        primary: Color.fromARGB(255, 29, 6, 229),
-                      ),
-                      child: Text("Ver Disponibilidade"),
+                          subtitle: Text(
+                            doctorInfo.city,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromARGB(255, 29, 6, 229),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  ExpansionTile(
-                    title: Text('Endereço de Atendimento'),
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.location_on),
-                        title: Text(
-                          doctorInfo.address,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Color.fromARGB(255, 29, 6, 229),
-                          ),
-                        ),
-                        subtitle: Text(
-                          doctorInfo.city,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Color.fromARGB(255, 29, 6, 229),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(),
-                ],
-              );
-            }).toList(),
-          );
-        } else {
-          return Container();
-        }
-      },
-    );
+                    Divider(),
+                  ],
+                );
+              }).toList(),
+            );
+          } else {
+            return Container();
+          }
+        },
+      );
+    } else {
+      return Container(); // Retorna um container vazio se outro botão estiver selecionado
+    }
   }
 }

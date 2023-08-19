@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_tcc_agend/screnns/calendar_screen.dart';
@@ -172,6 +173,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       stream: FirebaseFirestore.instance
           .collection('medico')
           .where('especialidades', isEqualTo: especialidade)
+          .where('status',
+              isEqualTo: 'Agendado') // Filtre por status "Agendado"
           .limit(1)
           .snapshots(),
       builder: (context, snapshot) {
@@ -230,6 +233,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Widget _buildDoctorBody() {
     final especialidade = widget.especialidade;
+    String? userUID = FirebaseAuth.instance.currentUser?.uid;
     if (_buttonIndex == 0) {
       // Verifica se o botão "Disponível" está selecionado
       return StreamBuilder<QuerySnapshot>(
@@ -348,8 +352,222 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           }
         },
       );
-    } else {
-      return Container(); // Retorna um container vazio se outro botão estiver selecionado
+    } else if (_buttonIndex == 1) {
+      return StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('agendar')
+            .where('userUID', isEqualTo: userUID)
+            .where('status', isEqualTo: 'Agendado')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (snapshot.hasData) {
+            return Column(
+              children: snapshot.data!.docs.map((appointment) {
+                final appointmentData =
+                    appointment.data() as Map<String, dynamic>;
+                String horaInicio = appointmentData['horaInicio'];
+                String horaTermino = appointmentData['horaTermino'];
+                String endereco = appointmentData['endereco'];
+                String cidade = appointmentData['cidade'];
+                String doctorName = appointmentData['doctorName'];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      title: Text(
+                        doctorName,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Agendado',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                      ),
+                      trailing: IconButton(
+                        onPressed: () async {
+                          bool userConfirmed = await showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text('Cancelar Agendamento'),
+                                content: Text(
+                                    'Tem certeza de que deseja cancelar este agendamento?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(false); // Usuário não confirmou
+                                    },
+                                    child: Text('Não'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(true); // Usuário confirmou
+                                    },
+                                    child: Text('Sim'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (userConfirmed == true) {
+                            // Realizar a atualização do status na coleção "agendar" para "Cancelado"
+                            String docId = appointment
+                                .id; // Substituir pelo ID real do documento
+                            await FirebaseFirestore.instance
+                                .collection('agendar')
+                                .doc(docId)
+                                .update({'status': 'Cancelado'});
+
+                            // Implementar qualquer outra ação necessária após o cancelamento
+                          }
+                        },
+                        icon: Icon(Icons.cancel),
+                      ),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.access_time),
+                      title: Text(
+                        'Início: $horaInicio - Término: $horaTermino',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                      ),
+                    ),
+                    ExpansionTile(
+                      title: Text('Endereço de Atendimento'),
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.location_on),
+                          title: Text(
+                            endereco,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromARGB(255, 29, 6, 229),
+                            ),
+                          ),
+                          subtitle: Text(
+                            cidade,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromARGB(255, 29, 6, 229),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Divider(),
+                  ],
+                );
+              }).toList(),
+            );
+          } else {
+            return Center(child: Text('Nenhum agendamento encontrado.'));
+          }
+        },
+      );
+    } else if (_buttonIndex == 2) {
+      return StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('agendar')
+            .where('userUID', isEqualTo: userUID)
+            .where('status', isEqualTo: 'Cancelado')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (snapshot.hasData) {
+            return Column(
+              children: snapshot.data!.docs.map((appointment) {
+                final appointmentData =
+                    appointment.data() as Map<String, dynamic>;
+                String horaInicio = appointmentData['horaInicio'];
+                String horaTermino = appointmentData['horaTermino'];
+                String endereco = appointmentData['endereco'];
+                String cidade = appointmentData['cidade'];
+                String doctorName = appointmentData['doctorName'];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      title: Text(
+                        doctorName,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Cancelado',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                      ),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.access_time),
+                      title: Text(
+                        'Início: $horaInicio - Término: $horaTermino',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color.fromARGB(255, 29, 6, 229),
+                        ),
+                      ),
+                    ),
+                    ExpansionTile(
+                      title: Text('Endereço de Atendimento'),
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.location_on),
+                          title: Text(
+                            endereco,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromARGB(255, 29, 6, 229),
+                            ),
+                          ),
+                          subtitle: Text(
+                            cidade,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color.fromARGB(255, 29, 6, 229),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Divider(),
+                  ],
+                );
+              }).toList(),
+            );
+          } else {
+            return Center(
+                child: Text('Nenhum agendamento cancelado encontrado.'));
+          }
+        },
+      );
     }
+
+    return SizedBox();
   }
 }

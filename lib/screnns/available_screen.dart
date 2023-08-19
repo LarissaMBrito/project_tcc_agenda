@@ -70,6 +70,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       QuerySnapshot disponibilizarSnapshot = await FirebaseFirestore.instance
           .collection('disponibilizar')
           .where('especialidades', isEqualTo: _selectedSpecialty)
+          .where('status', isEqualTo: true) // Filtra por status true
           .get();
 
       setState(() {
@@ -224,6 +225,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                   'cidade': _selectedCity,
                   'endereco': _selectedEnd,
                   'user_id': _user.uid,
+                  'status': true,
                 });
 
                 _showConfirmationDialog();

@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_tcc_agend/screnns/login_screen.dart';
+import 'package:project_tcc_agend/screnns/profile_screen.dart';
+import 'package:project_tcc_agend/screnns/terms_use_screen.dart';
 
 class SettingScreen extends StatelessWidget {
   // Função para efetuar o logout
@@ -33,7 +35,14 @@ class SettingScreen extends StatelessWidget {
             children: [
               Divider(height: 10),
               ListTile(
-                onTap: () {},
+                onTap: () {
+                  // Navegue para a tela de ProfileScreen quando o usuário clicar em "Perfil"
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ProfileScreen(),
+                    ),
+                  );
+                },
                 leading: Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -81,7 +90,15 @@ class SettingScreen extends StatelessWidget {
               ),
               SizedBox(height: 20),
               ListTile(
-                onTap: () {},
+                onTap: () {
+                  // Navegue para a tela TermsOfUseScreen quando o usuário clicar em "Privacidade"
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          TermsOfUseScreen(), // Substitua pelo nome correto da sua tela
+                    ),
+                  );
+                },
                 leading: Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -151,6 +168,9 @@ class SettingScreen extends StatelessWidget {
                 ),
                 trailing: Icon(Icons.arrow_forward_ios_rounded),
               ),
+
+              SizedBox(height: 20),
+              // ... (outras opções de configurações)
               Divider(height: 40),
               ListTile(
                 onTap: () {

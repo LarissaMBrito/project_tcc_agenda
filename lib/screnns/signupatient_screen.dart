@@ -418,9 +418,12 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
         password: _senhaControoler.text,
       );
 
+      String userId = userCredential.user!.uid; // Obtenha o ID do usuário
+
       Map<String, dynamic> userData = {
         'email': _emailControler.text,
         'senha': _senhaControoler.text,
+        'userId': userId,
       };
 
       if (_selectedUserType == "Médico") {
@@ -446,7 +449,9 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
 
       CollectionReference userTypeCollection =
           FirebaseFirestore.instance.collection(tipoUsuario);
-      await userTypeCollection.doc(userCredential.user!.uid).set(userData);
+
+      // Adicione o ID do usuário ao documento do usuário
+      await userTypeCollection.doc(userId).set(userData);
 
       String nomeExibicao = _nomeControoler.text.trim();
       List<String> nomePartes = nomeExibicao.split(' ');

@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/widgets.dart';
 
 // Import Firebase e Firestore
 
@@ -16,6 +18,8 @@ class HomeScreenMed extends StatefulWidget {
 class _HomeScreenMedState extends State<HomeScreenMed> {
   int _buttonIndex = 0;
   DateTime? _selectedDate;
+  String _medicoName = '';
+  String _perfilImageUrl = 'images/medico.jpg';
 
   // Lista de agendamentos
   // ignore: unused_field
@@ -26,7 +30,8 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
   @override
   void initState() {
     super.initState();
-    _fetchAgendamentosFromFirebase(); // Chame a função aqui para buscar os dados.
+    _fetchMedicoDataFromFirebase();
+    _fetchAgendamentosFromFirebase();
   }
 
   @override
@@ -47,7 +52,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Olá, Manuela",
+                    "Olá, $_medicoName", // Usando a variável _medicoName
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w500,
@@ -55,11 +60,16 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                   ),
                   CircleAvatar(
                     radius: 25,
-                    backgroundImage: AssetImage("images/medico.jpg"),
-                  ),
+                    backgroundImage: _perfilImageUrl.startsWith('http')
+                        ? NetworkImage(
+                            _perfilImageUrl) // Se for uma URL, carregue a imagem da rede
+                        : AssetImage(_perfilImageUrl) as ImageProvider<
+                            Object>, // Converte AssetImage para ImageProvider
+                  )
                 ],
               ),
             ),
+            SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: TextField(
@@ -180,7 +190,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                     elevation: 4,
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundImage: AssetImage("images/image.jpg"),
+                        //backgroundImage: AssetImage("images/image.jpg"),
                         radius: 24,
                       ),
                       title: Column(
@@ -286,42 +296,76 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
     );
   }
 
-  // ... O restante do código permanece o mesmo ...
-
-  // Função para buscar agendamentos do Firebase
   Future<void> _fetchAgendamentosFromFirebase() async {
     try {
-      final querySnapshot =
-          await FirebaseFirestore.instance.collection('agendar').get();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final userId = user.uid;
 
-      final agendamentos = querySnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return Agendamento(
-          data: (data['data'] as Timestamp).toDate(),
-          usuarioAgendou: data['usuarioAgendou'] as String,
-          horaInicio: data['horaInicio'] as String,
-          horaTermino: data['horaTermino'] as String,
-          status: data['status'] as String,
-        );
-      }).toList();
-      _agendamentosAgendados = agendamentos
-          .where((agendamento) => agendamento.status == "Agendado")
-          .toList();
-      _agendamentosCancelados = agendamentos
-          .where((agendamento) => agendamento.status == "Cancelado")
-          .toList();
+        final userDocRef =
+            FirebaseFirestore.instance.collection('medico').doc(userId);
+        final userDataSnapshot = await userDocRef.get();
 
-      print('Agendamentos Agendados: $_agendamentosAgendados');
-      print('Agendamentos Cancelados: $_agendamentosCancelados');
+        if (userDataSnapshot.exists) {
+          // ignore: unused_local_variable
+          final medicoName = userDataSnapshot.get('nome');
 
-      print(
-          'Agendamentos buscados: $agendamentos'); // Adicione este log para depuração.
+          // Substitua 'nome' pelo campo correto do nome do médico
 
-      setState(() {
-        _agendamentos = agendamentos;
-      });
+          final querySnapshot = await FirebaseFirestore.instance
+              .collection('agendar')
+              .where('user_id', isEqualTo: userId)
+              .get();
+
+          final agendamentos = querySnapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return Agendamento(
+              data: (data['data'] as Timestamp).toDate(),
+              usuarioAgendou: data['usuarioAgendou'] as String,
+              horaInicio: data['horaInicio'] as String,
+              horaTermino: data['horaTermino'] as String,
+              status: data['status'] as String,
+            );
+          }).toList();
+
+          _agendamentosAgendados = agendamentos
+              .where((agendamento) => agendamento.status == "Agendado")
+              .toList();
+          _agendamentosCancelados = agendamentos
+              .where((agendamento) => agendamento.status == "Cancelado")
+              .toList();
+
+          setState(() {
+            _agendamentos = agendamentos;
+          });
+        }
+      }
     } catch (e) {
       print('Erro ao buscar agendamentos: $e');
+    }
+  }
+
+  Future<void> _fetchMedicoDataFromFirebase() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final userId = user.uid;
+
+        final userDocRef =
+            FirebaseFirestore.instance.collection('medico').doc(userId);
+        final userDataSnapshot = await userDocRef.get();
+
+        final nomeMedico = userDataSnapshot.get('nome');
+
+        setState(() {
+          _medicoName =
+              nomeMedico ?? ''; // Use o nome do médico mesmo se for nulo
+          _perfilImageUrl = userDataSnapshot.get('perfilImageUrl') ??
+              'images/medico.jpg'; // Use a imagem padrão se for nulo
+        });
+      }
+    } catch (e) {
+      print('Error fetching doctor data: $e');
     }
   }
 

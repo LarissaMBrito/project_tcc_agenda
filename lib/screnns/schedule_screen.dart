@@ -215,8 +215,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       context,
                       MaterialPageRoute(
                           builder: (context) => CalendarScreen(
-                              doctorName: doctorName,
-                              doctorSpecialty: doctorSpecialty)),
+                                doctorName: doctorName,
+                                doctorSpecialty: doctorSpecialty,
+                                doctorId: '',
+                              )),
                     );
                   },
                   child: Text("Ver Disponibilidade"),
@@ -310,6 +312,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               builder: (context) => CalendarScreen(
                                 doctorName: doctorInfo.name,
                                 doctorSpecialty: doctorInfo.specialty,
+                                doctorId: '',
                               ),
                             ),
                           );

@@ -22,6 +22,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
   final _cpfControoler = TextEditingController();
   final _crmControoler = TextEditingController();
   final _enderecoControoler = TextEditingController();
+  final _numenderecoControoler = TextEditingController();
   final _cidadeControoler = TextEditingController();
   //final _especialidadeControoler = TextEditingController();
   final _senhaControoler = TextEditingController();
@@ -117,28 +118,6 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                       ),
                       SizedBox(height: 15),
                       TextField(
-                        controller: _senhaControoler,
-                        obscureText: passToggle,
-                        decoration: InputDecoration(
-                          labelText: "Senha",
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.lock),
-                          suffixIcon: InkWell(
-                            onTap: () {
-                              setState(() {
-                                passToggle = !passToggle;
-                              });
-                            },
-                            child: Icon(
-                              passToggle
-                                  ? CupertinoIcons.eye_slash_fill
-                                  : CupertinoIcons.eye_fill,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                      TextField(
                         controller: _cpfControoler,
                         decoration: InputDecoration(
                           labelText: "CPF",
@@ -175,6 +154,15 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                       ),
                       SizedBox(height: 15),
                       TextField(
+                        controller: _numenderecoControoler,
+                        decoration: InputDecoration(
+                          labelText: "Numero do Endereço",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.location_on),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
                         controller: _cidadeControoler,
                         decoration: InputDecoration(
                           labelText: "Cidade de Atendimento",
@@ -201,6 +189,28 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
                             child: Text(value),
                           );
                         }).toList(),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
+                        controller: _senhaControoler,
+                        obscureText: passToggle,
+                        decoration: InputDecoration(
+                          labelText: "Senha",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock),
+                          suffixIcon: InkWell(
+                            onTap: () {
+                              setState(() {
+                                passToggle = !passToggle;
+                              });
+                            },
+                            child: Icon(
+                              passToggle
+                                  ? CupertinoIcons.eye_slash_fill
+                                  : CupertinoIcons.eye_fill,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   )
@@ -433,6 +443,7 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
         userData['cpf'] = _cpfControoler.text;
         userData['crm'] = _crmControoler.text;
         userData['endereco'] = _enderecoControoler.text;
+        userData['numero'] = _numenderecoControoler.text;
         userData['cidade'] = _cidadeControoler.text;
         userData['especialidade'] = _selectedSpecialty;
       } else if (_selectedUserType == "Paciente") {

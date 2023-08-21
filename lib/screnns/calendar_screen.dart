@@ -5,8 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class CalendarScreen extends StatefulWidget {
   final String doctorName;
   final String doctorSpecialty;
+  final String doctorId; // Adicione esta linha
 
-  CalendarScreen({required this.doctorName, required this.doctorSpecialty});
+  CalendarScreen(
+      {required this.doctorName,
+      required this.doctorSpecialty,
+      required this.doctorId});
 
   @override
   _CalendarScreenState createState() => _CalendarScreenState();
@@ -93,6 +97,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
           .get()
           .then((snapshot) => snapshot.docs.first);
 
+      String user_id = disponibilidadeSnapshot[
+          'user_id']; // Obtém o valor do campo "user_id"
+
       // ignore: unused_local_variable
       String cidade = disponibilidadeSnapshot['cidade'];
       // ignore: unused_local_variable
@@ -101,6 +108,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       // Restante do código para salvar o agendamento
       await FirebaseFirestore.instance.collection('agendar').add({
         'doctorName': widget.doctorName,
+        // 'doctorId': widget.doctorId,
+        'user_id': user_id,
         'data': startDateTime,
         'horaInicio': startTime.format(context),
         'horaTermino': endTime.format(context),

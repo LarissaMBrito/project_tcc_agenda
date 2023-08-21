@@ -1,3 +1,4 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,17 +16,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _passwordController;
   late TextEditingController _phoneController;
-  File? _image; // Adicione esta linha para armazenar a imagem selecionada
+
+  File? _image;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _emailController = TextEditingController();
-    _passwordController = TextEditingController();
+
     _phoneController = TextEditingController();
 
     _initializeControllerValues();
@@ -37,29 +36,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await user.reload();
       await user.getIdToken();
 
-      if (user.displayName != null && user.displayName!.isNotEmpty) {
-        setState(() {
-          _nameController.text = user.displayName ?? '';
-        });
-      } else {
-        final userData =
-            await _firestore.collection('medico').doc(user.uid).get();
-        final nome = userData.get('nome') as String?;
-        if (nome != null && nome.isNotEmpty) {
-          setState(() {
-            _nameController.text = nome;
-          });
-        } else {
-          setState(() {
-            _nameController.text = '';
-          });
-        }
-      }
+      final pacienteData =
+          await _firestore.collection('paciente').doc(user.uid).get();
 
-      setState(() {
-        _emailController.text = user.email ?? '';
-        _phoneController.text = user.phoneNumber ?? '';
-      });
+      final userData =
+          await _firestore.collection('medico').doc(user.uid).get();
+
+      if (pacienteData.exists) {
+        setState(() {
+          _nameController =
+              TextEditingController(text: pacienteData.get('nome') ?? '');
+          _phoneController =
+              TextEditingController(text: pacienteData.get('telefone') ?? '');
+        });
+      } else if (userData.exists) {
+        setState(() {
+          _nameController =
+              TextEditingController(text: userData.get('nome') ?? '');
+          _phoneController =
+              TextEditingController(text: userData.get('telefone') ?? '');
+        });
+      }
     }
   }
 
@@ -76,21 +73,123 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _updateProfile() async {
     final user = _auth.currentUser;
     if (user != null) {
-      await user.updateProfile(displayName: _nameController.text);
-      await user.updateEmail(_emailController.text);
-      if (_passwordController.text.isNotEmpty) {
-        await user.updatePassword(_passwordController.text);
-      }
-      await _firestore.collection('medico').doc(user.uid).set({
-        'nome': _nameController.text,
-        'email': _emailController.text,
-        'telefone': _phoneController.text,
-      });
+      // Verificar se o usuário é médico ou paciente
+      final pacienteData =
+          await _firestore.collection('paciente').doc(user.uid).get();
+      final userData =
+          await _firestore.collection('medico').doc(user.uid).get();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Perfil atualizado com sucesso!')),
-      );
+      if (pacienteData.exists) {
+        await _updatePacienteProfile(user, pacienteData);
+      } else if (userData.exists) {
+        await _updateMedicoProfile(user, userData);
+      }
     }
+  }
+
+  Future<void> _updatePacienteProfile(
+      User user, DocumentSnapshot pacienteData) async {
+    // Atualizar os campos específicos do perfil de paciente
+    final Map<String, dynamic> updatedFields = {};
+
+    if (pacienteData.get('nome') != _nameController.text) {
+      updatedFields['nome'] = _nameController.text;
+    }
+    if (pacienteData.get('telefone') != _phoneController.text) {
+      updatedFields['telefone'] = _phoneController.text;
+    }
+
+    if (updatedFields.isNotEmpty) {
+      await _firestore
+          .collection('paciente')
+          .doc(user.uid)
+          .update(updatedFields);
+    }
+
+    // Salvar a imagem no Firebase Storage (se necessário)
+    if (_image != null) {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('perfil_images')
+          .child('${user.uid}.jpg');
+      final uploadTask = storageRef.putFile(_image!);
+      await uploadTask.whenComplete(() {});
+
+      final downloadUrl = await storageRef.getDownloadURL();
+      await _firestore.collection('paciente').doc(user.uid).update({
+        'perfilImageUrl': downloadUrl,
+      });
+    }
+
+    // Exibir o diálogo de sucesso
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sucesso!'),
+          content: Text('O perfil foi atualizado com sucesso.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fechar o diálogo
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateMedicoProfile(
+      User user, DocumentSnapshot userData) async {
+    // Atualizar os campos específicos do perfil de médico
+    final Map<String, dynamic> updatedFields = {};
+
+    if (userData.get('nome') != _nameController.text) {
+      updatedFields['nome'] = _nameController.text;
+    }
+    if (userData.get('telefone') != _phoneController.text) {
+      updatedFields['telefone'] = _phoneController.text;
+    }
+
+    if (updatedFields.isNotEmpty) {
+      await _firestore.collection('medico').doc(user.uid).update(updatedFields);
+    }
+
+    // Salvar a imagem no Firebase Storage (se necessário)
+    if (_image != null) {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('perfil_images')
+          .child('${user.uid}.jpg');
+      final uploadTask = storageRef.putFile(_image!);
+      await uploadTask.whenComplete(() {});
+
+      final downloadUrl = await storageRef.getDownloadURL();
+      await _firestore.collection('medico').doc(user.uid).update({
+        'perfilImageUrl': downloadUrl,
+      });
+    }
+
+    // Exibir o diálogo de sucesso
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sucesso!'),
+          content: Text('O perfil foi atualizado com sucesso.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fechar o diálogo
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -99,16 +198,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text('Perfil'),
         backgroundColor: const Color.fromARGB(255, 29, 6, 229),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: () async {
-              if (_formKey.currentState!.validate()) {
-                await _updateProfile();
-              }
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -121,7 +210,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _pickImage();
                 },
                 child: CircleAvatar(
-                  radius: 60,
+                  radius: 130,
+                  backgroundColor: Colors.grey[300], // Cor de fundo padrão
                   backgroundImage: _image != null ? FileImage(_image!) : null,
                   child: _image == null
                       ? Icon(
@@ -144,21 +234,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
               ),
               TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Por favor, insira seu email';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Senha'),
-                obscureText: true,
-              ),
-              TextFormField(
                 controller: _phoneController,
                 decoration: InputDecoration(labelText: 'Telefone'),
               ),
@@ -166,8 +241,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          if (_formKey.currentState!.validate()) {
+            await _updateProfile();
+          }
+        },
+        child: Icon(Icons.save),
+        backgroundColor: Color.fromARGB(255, 29, 6, 229),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
-
-void main() => runApp(MaterialApp(home: ProfileScreen()));

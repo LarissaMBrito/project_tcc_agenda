@@ -1,5 +1,3 @@
-// ignore_for_file: unused_field, duplicate_ignore
-
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +25,7 @@ class AppointmentScheduler extends StatefulWidget {
 }
 
 class _AppointmentSchedulerState extends State<AppointmentScheduler> {
+  // ignore: unused_field
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
@@ -85,6 +84,23 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     } catch (e) {
       print('Erro ao buscar médicos disponíveis: $e');
     }
+  }
+
+  Future<void> _updateAppointment(
+    String docId,
+    DateTime editedDate,
+    TimeOfDay editedStartTime,
+    TimeOfDay editedEndTime,
+  ) async {
+    await FirebaseFirestore.instance
+        .collection('disponibilizar')
+        .doc(docId)
+        .update({
+      'start_time': editedStartTime.format(context),
+      'end_time': editedEndTime.format(context),
+      'date': editedDate.toUtc(),
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 
   Widget _buildTimePicker(String label, TimeOfDay? time) {
@@ -148,57 +164,25 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     );
   }
 
-  void _editAppointment(
-      Map<String, dynamic> appointmentData, String docId) async {
-    DateTime selectedDate = appointmentData['date'].toDate();
-    TimeOfDay selectedStartTime = TimeOfDay(
-      hour: int.parse(appointmentData['start_time'].split(':')[0]),
-      minute: int.parse(appointmentData['start_time'].split(':')[1]),
-    );
-    TimeOfDay selectedEndTime = TimeOfDay(
-      hour: int.parse(appointmentData['end_time'].split(':')[0]),
-      minute: int.parse(appointmentData['end_time'].split(':')[1]),
-    );
-
-    DateTime? editedDate = await showDatePicker(
+  void _showEditAppointmentDialog(
+      Map<String, dynamic> appointmentData, String docId) {
+    showDialog(
       context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2023, 1, 1),
-      lastDate: DateTime(2023, 12, 31),
-    );
-
-    if (editedDate != null) {
-      TimeOfDay? editedStartTime = await showTimePicker(
-        context: context,
-        initialTime: selectedStartTime,
-      );
-
-      if (editedStartTime != null) {
-        TimeOfDay? editedEndTime = await showTimePicker(
-          context: context,
-          initialTime: selectedEndTime,
+      builder: (BuildContext context) {
+        return EditAppointmentDialog(
+          selectedDate: appointmentData['date'].toDate(),
+          selectedStartTime: TimeOfDay(
+            hour: int.parse(appointmentData['start_time'].split(':')[0]),
+            minute: int.parse(appointmentData['start_time'].split(':')[1]),
+          ),
+          selectedEndTime: TimeOfDay(
+            hour: int.parse(appointmentData['end_time'].split(':')[0]),
+            minute: int.parse(appointmentData['end_time'].split(':')[1]),
+          ),
+          docId: docId, // Passar o ID do documento
         );
-
-        if (editedEndTime != null) {
-          await FirebaseFirestore.instance
-              .collection('disponibilizar')
-              .doc(docId)
-              .update({
-            'start_time': editedStartTime.format(context),
-            'end_time': editedEndTime.format(context),
-            'date': editedDate.toUtc(), // Convert to UTC before updating
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-
-          // Exibir mensagem de confirmação
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Alteração realizada.'),
-            ),
-          );
-        }
-      }
-    }
+      },
+    );
   }
 
   void _deleteAppointment(String docId) async {
@@ -249,11 +233,9 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                 firstDay: DateTime.utc(2023, 1, 1),
                 lastDay: DateTime.utc(2023, 12, 31),
                 focusedDay: _focusedDay,
-                calendarFormat:
-                    CalendarFormat.week, // Alterar para formato de semana
-                daysOfWeekHeight:
-                    40, // Ajustar a altura da linha de dias da semana
-                rowHeight: 60, // Ajustar a altura de cada linha do calendário
+                calendarFormat: CalendarFormat.week,
+                daysOfWeekHeight: 40,
+                rowHeight: 60,
                 onFormatChanged: (format) {
                   setState(() {
                     _calendarFormat = format;
@@ -277,8 +259,6 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
               SizedBox(height: 20),
               _buildTimePicker("Hora de Término", _endTime),
               SizedBox(height: 20),
-
-              // Lista de Horários Disponibilizados
               Text(
                 'Horários Disponibilizados:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -332,7 +312,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                                     icon: Icon(Icons.edit),
                                     color: Colors.black,
                                     onPressed: () {
-                                      _editAppointment(disponibilizarData,
+                                      _showEditAppointmentDialog(
+                                          disponibilizarData,
                                           disponibilizarDocs[index].id);
                                     },
                                   ),
@@ -371,7 +352,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                   'end_time': _endTime!.format(context),
                   'date': DateTime(_selectedDay.year, _selectedDay.month,
                           _selectedDay.day)
-                      .toUtc(), // Convert to UTC before saving
+                      .toUtc(),
                   'timestamp': FieldValue.serverTimestamp(),
                   'nome': _selectedDoctorName,
                   'especialidades': _selectedSpecialty,
@@ -388,6 +369,167 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
         backgroundColor: Color.fromARGB(255, 29, 6, 229),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+}
+
+class EditAppointmentDialog extends StatefulWidget {
+  final DateTime selectedDate;
+  final TimeOfDay selectedStartTime;
+  final TimeOfDay selectedEndTime;
+  final String docId; // Adicionar esta linha
+
+  EditAppointmentDialog({
+    required this.selectedDate,
+    required this.selectedStartTime,
+    required this.selectedEndTime,
+    required this.docId,
+  });
+
+  @override
+  _EditAppointmentDialogState createState() => _EditAppointmentDialogState();
+}
+
+class _EditAppointmentDialogState extends State<EditAppointmentDialog> {
+  late DateTime _editedDate;
+  late TimeOfDay _editedStartTime;
+  late TimeOfDay _editedEndTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _editedDate = widget.selectedDate;
+    _editedStartTime = widget.selectedStartTime;
+    _editedEndTime = widget.selectedEndTime;
+  }
+
+  Future<void> _updateAppointment() async {
+    // Atualize os dados no Firebase
+    await FirebaseFirestore.instance
+        .collection('disponibilizar')
+        .doc(widget.docId)
+        .update({
+      'start_time': _editedStartTime.format(context),
+      'end_time': _editedEndTime.format(context),
+      'date': _editedDate.toUtc(),
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    // Feche o diálogo de edição
+    Navigator.of(context).pop();
+
+    // Aguarde um pequeno período para garantir que o diálogo anterior seja fechado
+    await Future.delayed(Duration(milliseconds: 100));
+
+    // Exiba um diálogo de confirmação da atualização
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Atualização Concluída'),
+          content: Text('As alterações foram salvas com sucesso.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fechar o diálogo
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Editar Agendamento'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+              'Data: ${_editedDate.day}/${_editedDate.month}/${_editedDate.year}'),
+          SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () async {
+              DateTime? editedDate = await showDatePicker(
+                context: context,
+                initialDate: _editedDate,
+                firstDate: DateTime(2023, 1, 1),
+                lastDate: DateTime(2023, 12, 31),
+              );
+
+              if (editedDate != null) {
+                setState(() {
+                  _editedDate = editedDate;
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              primary: Color.fromARGB(255, 29, 6, 229), // Cor de fundo
+              onPrimary: Colors.white, // Cor do texto
+            ),
+            child: Text('Alterar Data'),
+          ),
+          SizedBox(height: 10),
+          Text('Hora de Início: ${_editedStartTime.format(context)}'),
+          SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () async {
+              TimeOfDay? editedStartTime = await showTimePicker(
+                context: context,
+                initialTime: _editedStartTime,
+              );
+
+              if (editedStartTime != null) {
+                setState(() {
+                  _editedStartTime = editedStartTime;
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              primary: Color.fromARGB(255, 29, 6, 229), // Cor de fundo
+              onPrimary: Colors.white, // Cor do texto
+            ),
+            child: Text('Alterar Hora de Início'),
+          ),
+          SizedBox(height: 10),
+          Text('Hora de Término: ${_editedEndTime.format(context)}'),
+          SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () async {
+              TimeOfDay? editedEndTime = await showTimePicker(
+                context: context,
+                initialTime: _editedEndTime,
+              );
+
+              if (editedEndTime != null) {
+                setState(() {
+                  _editedEndTime = editedEndTime;
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              primary: Color.fromARGB(255, 29, 6, 229), // Cor de fundo
+              onPrimary: Colors.white, // Cor do texto
+            ),
+            child: Text('Alterar Hora de Término'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: _updateAppointment,
+          child: Text('Salvar'),
+        ),
+      ],
     );
   }
 }

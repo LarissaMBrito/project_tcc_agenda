@@ -20,6 +20,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
   DateTime? _selectedDate;
   String _medicoName = '';
   String _perfilImageUrl = 'images/medico.jpg';
+  String _searchText = '';
 
   // Lista de agendamentos
   // ignore: unused_field
@@ -31,6 +32,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
   void initState() {
     super.initState();
     _fetchMedicoDataFromFirebase();
+    _selectedDate = DateTime.now();
     _fetchAgendamentosFromFirebase();
   }
 
@@ -80,7 +82,11 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onChanged: (text) {},
+                onChanged: (text) {
+                  setState(() {
+                    _searchText = text;
+                  });
+                },
               ),
             ),
             const SizedBox(height: 20),
@@ -153,32 +159,41 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
             // Date Picker for Filtering
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final selectedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2025),
-                  );
-                  if (selectedDate != null) {
-                    setState(() {
-                      _selectedDate = selectedDate;
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  primary:
-                      Color.fromARGB(255, 29, 6, 229), // Set button color here
-                ),
-                child: Text(
-                  "Filtrar por Data",
-                  style: TextStyle(
-                    color: Colors.white,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.date_range, // Ícone de calendário
+                    color: Color.fromARGB(255, 29, 6, 229),
                   ),
-                ),
+                  SizedBox(width: 10), // Espaçamento entre o ícone e o botão
+                  ElevatedButton(
+                    onPressed: () async {
+                      final selectedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2025),
+                      );
+                      if (selectedDate != null) {
+                        setState(() {
+                          _selectedDate = selectedDate;
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary: Color.fromARGB(255, 29, 6, 229),
+                    ),
+                    child: Text(
+                      "Filtrar por Data",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+
             SizedBox(height: 20),
             // Updated section to display doctor's information without ExpansionPanel
             Container(
@@ -370,26 +385,34 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
   }
 
   List<Agendamento> get _filteredAgendamentos {
-    if (_selectedDate != null) {
-      final selectedDateLocal = _selectedDate!.toLocal();
-      if (_buttonIndex == 0) {
-        return _agendamentosAgendados.where((agendamento) {
-          final agendamentoDateLocal = agendamento.data.toLocal();
-          return agendamentoDateLocal.year == selectedDateLocal.year &&
-              agendamentoDateLocal.month == selectedDateLocal.month &&
-              agendamentoDateLocal.day == selectedDateLocal.day;
-        }).toList();
-      } else if (_buttonIndex == 1) {
-        return _agendamentosCancelados.where((agendamento) {
-          final agendamentoDateLocal = agendamento.data.toLocal();
-          return agendamentoDateLocal.year == selectedDateLocal.year &&
-              agendamentoDateLocal.month == selectedDateLocal.month &&
-              agendamentoDateLocal.day == selectedDateLocal.day;
-        }).toList();
-      }
+    final selectedDateLocal = _selectedDate?.toLocal() ??
+        DateTime.now().toLocal(); // Usar a data atual se _selectedDate for nulo
+    final searchText = _searchText
+        .toLowerCase(); // Converter o texto de pesquisa para minúsculas
+    if (_buttonIndex == 0) {
+      return _agendamentosAgendados.where((agendamento) {
+        final agendamentoDateLocal = agendamento.data.toLocal();
+        return ((agendamentoDateLocal.year == selectedDateLocal.year &&
+                    agendamentoDateLocal.month == selectedDateLocal.month &&
+                    agendamentoDateLocal.day == selectedDateLocal.day) ||
+                (selectedDateLocal == DateTime.now().toLocal() &&
+                    agendamentoDateLocal.isBefore(selectedDateLocal))) &&
+            agendamento.usuarioAgendou
+                .toLowerCase()
+                .contains(searchText); // Manter pesquisa por texto
+      }).toList();
+    } else if (_buttonIndex == 1) {
+      return _agendamentosCancelados.where((agendamento) {
+        final agendamentoDateLocal = agendamento.data.toLocal();
+        return (agendamentoDateLocal.year == selectedDateLocal.year &&
+                agendamentoDateLocal.month == selectedDateLocal.month &&
+                agendamentoDateLocal.day == selectedDateLocal.day) &&
+            agendamento.usuarioAgendou
+                .toLowerCase()
+                .contains(searchText); // Manter pesquisa por texto
+      }).toList();
     }
 
-    // Adicione esta linha para retornar uma lista vazia por padrão
     return [];
   }
 }

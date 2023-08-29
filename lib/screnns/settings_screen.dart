@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:project_tcc_agend/screnns/aboutus_screen.dart';
+import 'package:project_tcc_agend/screnns/general_screen.dart';
 import 'package:project_tcc_agend/screnns/login_screen.dart';
 import 'package:project_tcc_agend/screnns/profile_screen.dart';
 import 'package:project_tcc_agend/screnns/terms_use_screen.dart';
@@ -25,6 +27,7 @@ class SettingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Configurações'),
+        automaticallyImplyLeading: false,
         backgroundColor: const Color.fromARGB(255, 29, 6, 229),
       ),
       body: SingleChildScrollView(
@@ -64,30 +67,7 @@ class SettingScreen extends StatelessWidget {
                 ),
                 trailing: Icon(Icons.arrow_forward_ios_rounded),
               ),
-              SizedBox(height: 20),
-              ListTile(
-                onTap: () {},
-                leading: Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.deepPurple.shade100,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.notifications_none_outlined,
-                    color: Colors.deepPurple,
-                    size: 35,
-                  ),
-                ),
-                title: Text(
-                  "Notificações",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 20,
-                  ),
-                ),
-                trailing: Icon(Icons.arrow_forward_ios_rounded),
-              ),
+
               SizedBox(height: 20),
               ListTile(
                 onTap: () {
@@ -122,7 +102,15 @@ class SettingScreen extends StatelessWidget {
               ),
               SizedBox(height: 20),
               ListTile(
-                onTap: () {},
+                onTap: () {
+                  // Navegue para a tela TermsOfUseScreen quando o usuário clicar em "Privacidade"
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          GeneralScreen(), // Substitua pelo nome correto da sua tela
+                    ),
+                  );
+                },
                 leading: Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -146,7 +134,14 @@ class SettingScreen extends StatelessWidget {
               ),
               SizedBox(height: 20),
               ListTile(
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          AboutUsScreen(), // Substitua pelo nome correto da sua tela
+                    ),
+                  );
+                },
                 leading: Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project_tcc_agend/screnns/login_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -113,21 +114,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
           ],
         );
       },
-    );
-  }
-}
-
-class LoginScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Tela de Login'),
-        backgroundColor: Color.fromARGB(255, 29, 6, 229), // Cor da AppBar
-      ),
-      body: Center(
-        child: Text('Tela de Login'), // Conteúdo da tela de login
-      ),
     );
   }
 }

@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/widgets.dart';
-
-// Import Firebase e Firestore
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreenMed extends StatefulWidget {
@@ -19,14 +16,13 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
   int _buttonIndex = 0;
   DateTime? _selectedDate;
   String _medicoName = '';
-  String _perfilImageUrl = 'images/medico.jpg';
+  String _perfilImageUrl = 'images/iconpadrao.jpg';
   String _searchText = '';
-
-  // Lista de agendamentos
   // ignore: unused_field
   List<Agendamento> _agendamentos = [];
   List<Agendamento> _agendamentosAgendados = [];
   List<Agendamento> _agendamentosCancelados = [];
+  List<Agendamento> _agendamentosFinalizado = [];
 
   @override
   void initState() {
@@ -42,6 +38,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
       appBar: AppBar(
         title: Text("Bem - Vindo"),
         backgroundColor: const Color.fromARGB(255, 29, 6, 229),
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(top: 40),
@@ -54,7 +51,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Olá, $_medicoName", // Usando a variável _medicoName
+                    "Olá, $_medicoName",
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w500,
@@ -63,10 +60,8 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                   CircleAvatar(
                     radius: 25,
                     backgroundImage: _perfilImageUrl.startsWith('http')
-                        ? NetworkImage(
-                            _perfilImageUrl) // Se for uma URL, carregue a imagem da rede
-                        : AssetImage(_perfilImageUrl) as ImageProvider<
-                            Object>, // Converte AssetImage para ImageProvider
+                        ? NetworkImage(_perfilImageUrl)
+                        : AssetImage(_perfilImageUrl) as ImageProvider<Object>,
                   )
                 ],
               ),
@@ -156,16 +151,15 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
               ),
             ),
             SizedBox(height: 30),
-            // Date Picker for Filtering
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Row(
                 children: [
                   Icon(
-                    Icons.date_range, // Ícone de calendário
+                    Icons.date_range,
                     color: Color.fromARGB(255, 29, 6, 229),
                   ),
-                  SizedBox(width: 10), // Espaçamento entre o ícone e o botão
+                  SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () async {
                       final selectedDate = await showDatePicker(
@@ -193,116 +187,166 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                 ],
               ),
             ),
-
             SizedBox(height: 20),
-            // Updated section to display doctor's information without ExpansionPanel
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: _filteredAgendamentos.map((agendamento) {
-                  return Card(
-                    elevation: 4,
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        //backgroundImage: AssetImage("images/image.jpg"),
-                        radius: 24,
-                      ),
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            agendamento.usuarioAgendou,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 29, 6, 229),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Row(
+                children: [
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _filteredAgendamentos.length,
+                    itemBuilder: (context, index) {
+                      final agendamento = _filteredAgendamentos[index];
+                      return Card(
+                        elevation: 4,
+                        child: ListTile(
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
+                              Text(
+                                agendamento.usuarioAgendou,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                   color: Color.fromARGB(255, 29, 6, 229),
                                 ),
-                                padding: EdgeInsets.all(6),
-                                child: Icon(
-                                  Icons.calendar_today,
-                                  color: Colors.white,
-                                ),
                               ),
-                              SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              SizedBox(height: 10),
+                              Row(
                                 children: [
-                                  Text(
-                                    "Data:",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.black,
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color.fromARGB(255, 29, 6, 229),
+                                    ),
+                                    padding: EdgeInsets.all(6),
+                                    child: Icon(
+                                      Icons.calendar_today,
+                                      color: Colors.white,
                                     ),
                                   ),
-                                  Text(
-                                    "${agendamento.data.day} de ${_getMonthName(agendamento.data.month)}, ${agendamento.data.year}",
-                                    style: TextStyle(
-                                      fontSize: 18,
+                                  SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Data:",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      Text(
+                                        "${agendamento.data.day} de ${_getMonthName(agendamento.data.month)}, ${agendamento.data.year}",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color:
+                                              Color.fromARGB(255, 29, 6, 229),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
                                       color: Color.fromARGB(255, 29, 6, 229),
+                                    ),
+                                    padding: EdgeInsets.all(6),
+                                    child: Icon(
+                                      Icons.access_time,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Horário:",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Início: ${agendamento.horaInicio}",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color:
+                                              Color.fromARGB(255, 29, 6, 229),
+                                        ),
+                                      ),
+                                      Text(
+                                        "Término: ${agendamento.horaTermino}",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color:
+                                              Color.fromARGB(255, 29, 6, 229),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: agendamento.status == 'Agendado'
+                                        ? () {
+                                            _finalizeAppointment(
+                                                agendamento); // Chame a função de finalização
+                                          }
+                                        : null, // Desabilite o botão se estiver em outro status
+                                    style: ElevatedButton.styleFrom(
+                                      primary: Colors.green,
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 5, horizontal: 10),
+                                    ),
+                                    child: Text(
+                                      "Finalizar",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  ElevatedButton(
+                                    onPressed: agendamento.status == 'Agendado'
+                                        ? () {
+                                            _cancelAppointment(
+                                                agendamento); // Chame a função de cancelamento
+                                          }
+                                        : null, // Desabilite o botão se estiver em outro status
+                                    style: ElevatedButton.styleFrom(
+                                      primary: Colors.red,
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 5, horizontal: 10),
+                                    ),
+                                    child: Text(
+                                      "Cancelar",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                          SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color.fromARGB(255, 29, 6, 229),
-                                ),
-                                padding: EdgeInsets.all(6),
-                                child: Icon(
-                                  Icons.access_time,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Horário:",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  Text(
-                                    agendamento.horaInicio,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(255, 29, 6, 229),
-                                    ),
-                                  ),
-                                  Text(
-                                    agendamento.horaTermino,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(255, 29, 6, 229),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -322,11 +366,6 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
         final userDataSnapshot = await userDocRef.get();
 
         if (userDataSnapshot.exists) {
-          // ignore: unused_local_variable
-          final medicoName = userDataSnapshot.get('nome');
-
-          // Substitua 'nome' pelo campo correto do nome do médico
-
           final querySnapshot = await FirebaseFirestore.instance
               .collection('agendar')
               .where('user_id', isEqualTo: userId)
@@ -335,6 +374,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
           final agendamentos = querySnapshot.docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
             return Agendamento(
+              id: doc.id,
               data: (data['data'] as Timestamp).toDate(),
               usuarioAgendou: data['usuarioAgendou'] as String,
               horaInicio: data['horaInicio'] as String,
@@ -349,6 +389,9 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
           _agendamentosCancelados = agendamentos
               .where((agendamento) => agendamento.status == "Cancelado")
               .toList();
+          _agendamentosFinalizado = agendamentos
+              .where((agendamento) => agendamento.status == "Cancelado")
+              .toList();
 
           setState(() {
             _agendamentos = agendamentos;
@@ -357,6 +400,116 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
       }
     } catch (e) {
       print('Erro ao buscar agendamentos: $e');
+    }
+  }
+
+  Future<void> _cancelAppointment(Agendamento agendamento) async {
+    try {
+      final agendamentoDocRef =
+          FirebaseFirestore.instance.collection('agendar').doc(agendamento.id);
+
+      await agendamentoDocRef.update({
+        'status': 'Cancelado',
+      });
+
+      final updatedAgendamento = Agendamento(
+        id: agendamento.id,
+        data: agendamento.data,
+        usuarioAgendou: agendamento.usuarioAgendou,
+        horaInicio: agendamento.horaInicio,
+        horaTermino: agendamento.horaTermino,
+        status: 'Cancelado',
+      );
+
+      final index =
+          _agendamentos.indexWhere((element) => element.id == agendamento.id);
+      if (index != -1) {
+        setState(() {
+          _agendamentos[index] = updatedAgendamento;
+          _agendamentosAgendados
+              .removeWhere((element) => element.id == agendamento.id);
+          _agendamentosCancelados.add(updatedAgendamento);
+          _buttonIndex = 1;
+        });
+      }
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Agendamento Cancelado'),
+            content: Text('O agendamento foi cancelado com sucesso.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('Erro ao cancelar agendamento: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao cancelar o agendamento.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _finalizeAppointment(Agendamento agendamento) async {
+    try {
+      final agendamentoDocRef =
+          FirebaseFirestore.instance.collection('agendar').doc(agendamento.id);
+
+      await agendamentoDocRef.update({
+        'status': 'Finalizado', // Atualize o status para "Finalizado"
+      });
+
+      final updatedAgendamento = Agendamento(
+        id: agendamento.id,
+        data: agendamento.data,
+        usuarioAgendou: agendamento.usuarioAgendou,
+        horaInicio: agendamento.horaInicio,
+        horaTermino: agendamento.horaTermino,
+        status: 'Finalizado', // Atualize o status localmente
+      );
+
+      // Remova o agendamento da lista de agendamentos agendados
+      setState(() {
+        _agendamentosAgendados
+            .removeWhere((element) => element.id == agendamento.id);
+        _agendamentosFinalizado.add(
+            updatedAgendamento); // Adicione-o à lista de agendamentos finalizados
+      });
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Agendamento Finalizado'),
+            content: Text('O agendamento foi finalizado com sucesso.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('Erro ao finalizar agendamento: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao finalizar o agendamento.'),
+        ),
+      );
     }
   }
 
@@ -373,10 +526,9 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
         final nomeMedico = userDataSnapshot.get('nome');
 
         setState(() {
-          _medicoName =
-              nomeMedico ?? ''; // Use o nome do médico mesmo se for nulo
-          _perfilImageUrl = userDataSnapshot.get('perfilImageUrl') ??
-              'images/medico.jpg'; // Use a imagem padrão se for nulo
+          _medicoName = nomeMedico ?? '';
+          _perfilImageUrl =
+              userDataSnapshot.get('perfilImageUrl') ?? 'images/iconpadrao.jpg';
         });
       }
     } catch (e) {
@@ -385,10 +537,9 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
   }
 
   List<Agendamento> get _filteredAgendamentos {
-    final selectedDateLocal = _selectedDate?.toLocal() ??
-        DateTime.now().toLocal(); // Usar a data atual se _selectedDate for nulo
-    final searchText = _searchText
-        .toLowerCase(); // Converter o texto de pesquisa para minúsculas
+    final selectedDateLocal =
+        _selectedDate?.toLocal() ?? DateTime.now().toLocal();
+    final searchText = _searchText.toLowerCase();
     if (_buttonIndex == 0) {
       return _agendamentosAgendados.where((agendamento) {
         final agendamentoDateLocal = agendamento.data.toLocal();
@@ -397,9 +548,7 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
                     agendamentoDateLocal.day == selectedDateLocal.day) ||
                 (selectedDateLocal == DateTime.now().toLocal() &&
                     agendamentoDateLocal.isBefore(selectedDateLocal))) &&
-            agendamento.usuarioAgendou
-                .toLowerCase()
-                .contains(searchText); // Manter pesquisa por texto
+            agendamento.usuarioAgendou.toLowerCase().contains(searchText);
       }).toList();
     } else if (_buttonIndex == 1) {
       return _agendamentosCancelados.where((agendamento) {
@@ -407,24 +556,23 @@ class _HomeScreenMedState extends State<HomeScreenMed> {
         return (agendamentoDateLocal.year == selectedDateLocal.year &&
                 agendamentoDateLocal.month == selectedDateLocal.month &&
                 agendamentoDateLocal.day == selectedDateLocal.day) &&
-            agendamento.usuarioAgendou
-                .toLowerCase()
-                .contains(searchText); // Manter pesquisa por texto
+            agendamento.usuarioAgendou.toLowerCase().contains(searchText);
       }).toList();
     }
 
     return [];
   }
-}
 
-String _getMonthName(int month) {
-  final ptBrLocale = Locale('pt', 'BR');
-  initializeDateFormatting(ptBrLocale.toString());
-  return DateFormat.MMMM(ptBrLocale.toString())
-      .format(DateTime(DateTime.now().year, month));
+  String _getMonthName(int month) {
+    final ptBrLocale = Locale('pt', 'BR');
+    initializeDateFormatting(ptBrLocale.toString());
+    return DateFormat.MMMM(ptBrLocale.toString())
+        .format(DateTime(DateTime.now().year, month));
+  }
 }
 
 class Agendamento {
+  final String id;
   final DateTime data;
   final String usuarioAgendou;
   final String horaInicio;
@@ -432,10 +580,15 @@ class Agendamento {
   final String status;
 
   Agendamento({
+    required this.id,
     required this.data,
     required this.usuarioAgendou,
     required this.horaInicio,
     required this.horaTermino,
     required this.status,
   });
+}
+
+void main() {
+  runApp(MaterialApp(home: HomeScreenMed()));
 }

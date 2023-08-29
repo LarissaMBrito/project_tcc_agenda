@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:project_tcc_agend/screnns/income_screen.dart'; // Usando um apelido para diferenciar
+import 'package:project_tcc_agend/screnns/login_screen.dart';
+
 import 'package:project_tcc_agend/screnns/terms_use_screen.dart';
-import 'login_screen.dart';
+// Usando um apelido para diferenciar
 
 class SignUpMedScreen extends StatefulWidget {
   @override
@@ -470,19 +473,37 @@ class _SignUpMedScreenState extends State<SignUpMedScreen> {
         nomeExibicao = nomePartes[0];
       }
 
-      await userCredential.user!.updateDisplayName(nomeExibicao);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Usuário cadastrado com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
+      // Dentro da função cadastrar()
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) {
+          if (_selectedUserType == "Paciente") {
+            return IncomeScreen(); // Tela do paciente
+          } else if (_selectedUserType == "Médico" ||
+              _selectedUserType == "Administrador") {
+            return LoginScreen(); // Tela do médico e administrador
+          } else {
+            return LoginScreen(); // Tela de login
+          }
+        }),
       );
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => LoginScreen(),
-        ),
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Cadastro Concluído'),
+            content: Text('Seu cadastro foi realizado com sucesso!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fechar o diálogo
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
       );
     } catch (e) {
       print('Erro ao cadastrar usuário: $e');

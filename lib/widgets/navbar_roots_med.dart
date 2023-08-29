@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_tcc_agend/screnns/available_screen.dart';
 import 'package:project_tcc_agend/screnns/home_screen_med.dart';
+import 'package:project_tcc_agend/screnns/report_screen.dart';
 import 'package:project_tcc_agend/screnns/settings_screen.dart';
 
 class NavBarRoots_Med extends StatefulWidget {
@@ -13,6 +14,7 @@ class _NavBarRoots_MedState extends State<NavBarRoots_Med> {
   final _screens = [
     HomeScreenMed(),
     AppointmentScheduler(),
+    ReportScreen(),
     SettingScreen(),
   ];
 
@@ -45,6 +47,10 @@ class _NavBarRoots_MedState extends State<NavBarRoots_Med> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.calendar_month),
                 label: "Disponibilzar",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard),
+                label: "Relatório",
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),

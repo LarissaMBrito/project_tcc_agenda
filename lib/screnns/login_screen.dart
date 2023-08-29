@@ -59,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         title: Text('Login'),
         backgroundColor: const Color.fromARGB(255, 29, 6, 229),
+        automaticallyImplyLeading: false,
       ),
       body: Container(
         color: Colors.white,
@@ -70,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 20),
                 Padding(
                   padding: EdgeInsets.all(10),
-                  child: Image.asset("images/doutor.jpeg"),
+                  child: Image.asset("images/logo.jpeg"),
                 ),
                 SizedBox(height: 10),
                 Padding(

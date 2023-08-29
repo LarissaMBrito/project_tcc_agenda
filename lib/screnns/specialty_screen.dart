@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:project_tcc_agend/screnns/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Formulário de Especialidade',
+      title: 'Cadastro de Especialidade',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -163,8 +164,39 @@ class _SpecialtyScreenState extends State<SpecialtyScreen> {
               ),
             ),
           ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: GestureDetector(
+              onTap: () {
+                // Navegue para a tela de login
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          LoginScreen()), // Substitua LoginScreen() pelo nome da sua tela de login
+                );
+              },
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.red, // Cor de fundo do botão
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.exit_to_app, // Ícone do botão (sair)
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
+
+// Aqui você deve adicionar a definição da sua tela de login (LoginScreen) ou importá-la
+
+

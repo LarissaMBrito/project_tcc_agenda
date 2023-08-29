@@ -37,6 +37,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   String _selectedSpecialty = '';
   String _selectedCity = '';
   String _selectedEnd = '';
+  String _selectedNum = '';
+  String _selectedtel = '';
 
   // ignore: unused_field
   List<Map<String, dynamic>> _availableDoctors = [];
@@ -60,6 +62,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
           _selectedSpecialty = doctorSnapshot['especialidade'];
           _selectedCity = doctorSnapshot['cidade'];
           _selectedEnd = doctorSnapshot['endereco'];
+          _selectedNum = doctorSnapshot['numero'];
+          _selectedtel = doctorSnapshot['telefone'];
         });
         _fetchAvailableDoctors();
       }
@@ -215,13 +219,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Disponibilizar Data/Hora Atendimento'),
+        automaticallyImplyLeading: false,
         backgroundColor: Color.fromARGB(255, 29, 6, 229),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -357,6 +356,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
                   'nome': _selectedDoctorName,
                   'especialidades': _selectedSpecialty,
                   'cidade': _selectedCity,
+                  'telefone': _selectedtel,
+                  'numero': _selectedNum,
                   'endereco': _selectedEnd,
                   'user_id': _user.uid,
                   'status': true,

@@ -19,27 +19,7 @@ class WelcomeScreen extends StatelessWidget {
             SizedBox(height: 10),
             Padding(
               padding: EdgeInsets.all(10),
-              child: Image.asset("images/doutor.jpeg"),
-            ),
-            SizedBox(height: 25),
-            Text(
-              "AMS",
-              style: TextStyle(
-                color: Color.fromARGB(255, 29, 6, 229),
-                fontSize: 35,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-                wordSpacing: 2,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Atendimento Médico Social",
-              style: TextStyle(
-                color: Color.fromARGB(253, 0, 0, 0),
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              child: Image.asset("images/logo.jpeg"),
             ),
             SizedBox(height: 55),
             Column(

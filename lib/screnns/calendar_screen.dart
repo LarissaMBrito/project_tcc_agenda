@@ -23,6 +23,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   TimeOfDay? selectedEndTime;
+  int? selectedIndex;
+
+  TimeOfDay convertStringToTimeOfDay(String timeString) {
+    final List<String> parts = timeString.split(':');
+    final int hour = int.parse(parts[0]);
+    final int minute = int.parse(parts[1]);
+    return TimeOfDay(hour: hour, minute: minute);
+  }
 
   List<Map<String, dynamic>> disponibilidades = []; // Adicione esta linha
 
@@ -104,6 +112,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       String cidade = disponibilidadeSnapshot['cidade'];
       // ignore: unused_local_variable
       String endereco = disponibilidadeSnapshot['endereco'];
+      String telefone = disponibilidadeSnapshot['telefone'];
 
       // Restante do código para salvar o agendamento
       await FirebaseFirestore.instance.collection('agendar').add({
@@ -114,7 +123,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         'horaInicio': startTime.format(context),
         'horaTermino': endTime.format(context),
         'usuarioAgendou': userName, // Inserir o endereço do médico
-        'cidade': cidade, // Add cidade field
+        'cidade': cidade,
+        'telefone': telefone,
         'endereco': endereco,
         'userUID': userUID,
         'status':
@@ -201,105 +211,90 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    Column(
-                      children:
-                          disponibilidadesFiltradas.map((disponibilidade) {
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: disponibilidadesFiltradas.length,
+                      itemBuilder: (context, index) {
+                        final disponibilidade =
+                            disponibilidadesFiltradas[index];
                         final data =
                             disponibilidade.data() as Map<String, dynamic>;
                         final startTime = data['start_time'];
                         final endTime = data['end_time'];
+                        final date = data['date'].toDate();
 
-                        bool isSelected =
-                            selectedDate == data['date'].toDate() &&
-                                selectedTime == startTime &&
-                                selectedEndTime == endTime;
+                        bool isSelected = selectedIndex == index;
 
                         return ListTile(
-                          title: Text(
-                              "Data: ${data['date'].toDate().day}/${data['date'].toDate().month}/${data['date'].toDate().year}"),
+                          onTap: () {
+                            setState(() {
+                              selectedIndex = index;
+                              selectedDate = date;
+                              selectedTime =
+                                  convertStringToTimeOfDay(startTime);
+                              selectedEndTime =
+                                  convertStringToTimeOfDay(endTime);
+                            });
+                          },
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
                                 decoration: BoxDecoration(
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: Color.fromARGB(
+                                                    255, 98, 141, 179)
+                                                .withOpacity(0.5),
+                                            blurRadius: 5.0,
+                                            spreadRadius: 2.0,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ]
+                                      : [],
                                   color: isSelected
-                                      ? Colors.blue
-                                      : Colors
-                                          .transparent, // Cor de fundo em destaque quando selecionado
-                                  border:
-                                      Border.all(color: Colors.blue, width: 2),
+                                      ? const Color.fromARGB(255, 147, 193, 230)
+                                          .withOpacity(0.3)
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: Colors.blue,
+                                    width: 2,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 padding: EdgeInsets.all(8),
-                                child: Text(
-                                  "Horário: $startTime - $endTime",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Data: ${date.day}/${date.month}/${date.year}",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected
+                                            ? const Color.fromARGB(255, 6, 6, 6)
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      "Horário: $startTime - $endTime",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected
+                                            ? Colors.black
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                          onTap: () {
-                            setState(() {
-                              if (isSelected) {
-                                selectedDate = null;
-                                selectedTime = null;
-                                selectedEndTime = null;
-                              } else {
-                                selectedDate = data['date'].toDate();
-                                final startTimeComponents =
-                                    startTime.split(':');
-                                final endTimeComponents = endTime.split(':');
-                                final int startHour =
-                                    int.parse(startTimeComponents[0]);
-                                final int startMinute =
-                                    int.parse(startTimeComponents[1]);
-                                final int endHour =
-                                    int.parse(endTimeComponents[0]);
-                                final int endMinute =
-                                    int.parse(endTimeComponents[1]);
-
-                                selectedTime = TimeOfDay(
-                                    hour: startHour, minute: startMinute);
-                                selectedEndTime =
-                                    TimeOfDay(hour: endHour, minute: endMinute);
-                              }
-                            });
-                          },
                         );
-                      }).toList(),
+                      },
                     ),
-                    SizedBox(height: 20),
-                    if (selectedDate != null) ...[
-                      Text(
-                        'Horário Selecionado:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Data: ${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                    if (selectedTime != null && selectedEndTime != null) ...[
-                      Text(
-                        'Início: ${selectedTime!.hour}:${selectedTime!.minute}',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        'Término: ${selectedEndTime!.hour}:${selectedEndTime!.minute}',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               );
@@ -322,6 +317,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               selectedDate = null;
               selectedTime = null;
               selectedEndTime = null;
+              selectedIndex = null; // Reset the selected index
             });
 
             // Exibir o diálogo após o agendamento ser salvo

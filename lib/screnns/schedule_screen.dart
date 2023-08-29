@@ -2,18 +2,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_tcc_agend/screnns/calendar_screen.dart';
+import 'package:intl/intl.dart';
 
 class DoctorInfo {
   final String name;
   final String specialty;
   final String address;
   final String city;
+  final String numb;
+  final String phone;
 
   DoctorInfo({
     required this.name,
     required this.specialty,
     required this.address,
     required this.city,
+    required this.numb,
+    required this.phone,
   });
 }
 
@@ -32,6 +37,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   //bool _isDoctorDetailsExpanded = false;
   late String doctorName = "No doctors found";
   late String doctorSpecialty = "";
+  late String doctorTel = "";
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +193,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           final doctorData = doctor.data() as Map<String, dynamic>;
           doctorName = doctorData['nome'];
           doctorSpecialty = doctorData['especialidades'];
+          doctorTel = doctorData['telefone'];
 
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
@@ -202,6 +209,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
                 Text(
                   'Specialty: $doctorSpecialty',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromARGB(255, 29, 6, 229),
+                  ),
+                ),
+                Text(
+                  'Phone: $doctorTel', // Exibe o telefone do médico aqui
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -268,85 +283,113 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               final doctorData =
                   doctorsByName[doctorName]![0].data() as Map<String, dynamic>;
               String doctorSpecialty = especialidade;
+
               String doctorAddress =
                   doctorData['endereco'] ?? "Endereço desconhecido";
               String doctorCity = doctorData['cidade'] ?? "Cidade desconhecida";
+              String doctorNumb = doctorData['numero'] ?? "Cidade desconhecida";
+              String doctorPhone =
+                  doctorData['telefone'] ?? "Telefone desconhecida";
 
               doctorInfos.add(DoctorInfo(
                 name: doctorName,
                 specialty: doctorSpecialty,
                 address: doctorAddress,
                 city: doctorCity,
+                numb: doctorNumb,
+                phone: doctorPhone, // Fornecer o argumento 'phone' aqui
               ));
             }
 
             return Column(
               children: doctorInfos.map((doctorInfo) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      title: Text(
-                        doctorInfo.name,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                      subtitle: Text(
-                        doctorInfo.specialty,
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CalendarScreen(
-                                doctorName: doctorInfo.name,
-                                doctorSpecialty: doctorInfo.specialty,
-                                doctorId: '',
-                              ),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          primary: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                        child: Text("Ver Disponibilidade"),
-                      ),
-                    ),
-                    ExpansionTile(
-                      title: Text('Endereço de Atendimento'),
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.location_on),
-                          title: Text(
-                            doctorInfo.address,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color.fromARGB(255, 29, 6, 229),
-                            ),
-                          ),
-                          subtitle: Text(
-                            doctorInfo.city,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color.fromARGB(255, 29, 6, 229),
-                            ),
+                return Card(
+                  elevation:
+                      4, // Ajuste o valor da elevação conforme necessário
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        title: Text(
+                          doctorInfo.name,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 29, 6, 229),
                           ),
                         ),
-                      ],
-                    ),
-                    Divider(),
-                  ],
+                        subtitle: Text(
+                          doctorInfo.specialty,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromARGB(255, 29, 6, 229),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 16.0), // Add left padding
+                        child: Text(
+                          'Telefone: ${doctorInfo.phone}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 16.0), // Add left padding
+                        child: Text(
+                          'Endereço: ${doctorInfo.address}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 16.0), // Add left padding
+                        child: Text(
+                          'Cidade: ${doctorInfo.city}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 8,
+                          bottom: 16, // Adicione espaço extra abaixo do botão
+                        ),
+                        child: Container(
+                          height: 50, // Ajuste a altura conforme necessário
+                          alignment:
+                              Alignment.topCenter, // Alinhe o botão ao centro
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CalendarScreen(
+                                    doctorName: doctorInfo.name,
+                                    doctorSpecialty: doctorInfo.specialty,
+                                    doctorId: '',
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              primary: Color.fromARGB(255, 29, 6, 229),
+                            ),
+                            child: Text("Agendar"),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }).toList(),
             );
@@ -375,106 +418,116 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 String horaInicio = appointmentData['horaInicio'];
                 String horaTermino = appointmentData['horaTermino'];
                 String endereco = appointmentData['endereco'];
-                String cidade = appointmentData['cidade'];
+                String cidade = appointmentData['cidade'] ?? 'S';
+                String telefone = appointmentData['telefone'] ?? 'n';
                 String doctorName = appointmentData['doctorName'];
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      title: Text(
-                        doctorName,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Agendado',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                      trailing: IconButton(
-                        onPressed: () async {
-                          bool userConfirmed = await showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text('Cancelar Agendamento'),
-                                content: Text(
-                                    'Tem certeza de que deseja cancelar este agendamento?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .pop(false); // Usuário não confirmou
-                                    },
-                                    child: Text('Não'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .pop(true); // Usuário confirmou
-                                    },
-                                    child: Text('Sim'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                Timestamp timestamp = appointmentData['data'];
+                String formattedDate =
+                    DateFormat('dd/MM/yyyy').format(timestamp.toDate());
 
-                          if (userConfirmed == true) {
-                            // Realizar a atualização do status na coleção "agendar" para "Cancelado"
-                            String docId = appointment
-                                .id; // Substituir pelo ID real do documento
-                            await FirebaseFirestore.instance
-                                .collection('agendar')
-                                .doc(docId)
-                                .update({'status': 'Cancelado'});
-
-                            // Implementar qualquer outra ação necessária após o cancelamento
-                          }
-                        },
-                        icon: Icon(Icons.cancel),
-                      ),
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.access_time),
-                      title: Text(
-                        'Início: $horaInicio - Término: $horaTermino',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                    ),
-                    ExpansionTile(
-                      title: Text('Endereço de Atendimento'),
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.location_on),
-                          title: Text(
-                            endereco,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color.fromARGB(255, 29, 6, 229),
-                            ),
-                          ),
-                          subtitle: Text(
-                            cidade,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color.fromARGB(255, 29, 6, 229),
-                            ),
+                return Card(
+                  elevation:
+                      4, // Ajuste o valor da elevação conforme necessário
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        title: Text(
+                          doctorName,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 29, 6, 229),
                           ),
                         ),
-                      ],
-                    ),
-                    Divider(),
-                  ],
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Agendado',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Color.fromARGB(255, 29, 6, 229),
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Telefone: $telefone',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.black),
+                            ),
+                            Text(
+                              'Endereço: $endereco',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.black),
+                            ),
+                            Text(
+                              'Cidade: $cidade',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.black),
+                            ),
+                          ],
+                        ),
+                        trailing: IconButton(
+                          onPressed: () async {
+                            bool userConfirmed = await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text('Cancelar Agendamento'),
+                                  content: Text(
+                                      'Tem certeza de que deseja cancelar este agendamento?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop(
+                                            false); // Usuário não confirmou
+                                      },
+                                      child: Text('Não'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pop(true); // Usuário confirmou
+                                      },
+                                      child: Text('Sim'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (userConfirmed == true) {
+                              // Realizar a atualização do status na coleção "agendar" para "Cancelado"
+                              String docId = appointment
+                                  .id; // Substituir pelo ID real do documento
+                              await FirebaseFirestore.instance
+                                  .collection('agendar')
+                                  .doc(docId)
+                                  .update({'status': 'Cancelado'});
+
+                              // Implementar qualquer outra ação necessária após o cancelamento
+                            }
+                          },
+                          icon: Icon(Icons.cancel),
+                          color: Colors.red,
+                        ),
+                      ),
+                      ListTile(
+                        //leading: Icon(Icons.access_time),
+                        title: Text(
+                          'Data: $formattedDate  - Início: $horaInicio - Término: $horaTermino',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromARGB(255, 29, 6, 229),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Divider(),
+                    ],
+                  ),
                 );
               }).toList(),
             );
@@ -503,63 +556,72 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 String horaInicio = appointmentData['horaInicio'];
                 String horaTermino = appointmentData['horaTermino'];
                 String endereco = appointmentData['endereco'];
-                String cidade = appointmentData['cidade'];
+                String cidade = appointmentData['cidade'] ?? 'XX';
+                String telefone = appointmentData['telefone'] ?? 'X';
                 String doctorName = appointmentData['doctorName'];
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      title: Text(
-                        doctorName,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Cancelado',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.access_time),
-                      title: Text(
-                        'Início: $horaInicio - Término: $horaTermino',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Color.fromARGB(255, 29, 6, 229),
-                        ),
-                      ),
-                    ),
-                    ExpansionTile(
-                      title: Text('Endereço de Atendimento'),
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.location_on),
-                          title: Text(
-                            endereco,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color.fromARGB(255, 29, 6, 229),
-                            ),
-                          ),
-                          subtitle: Text(
-                            cidade,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color.fromARGB(255, 29, 6, 229),
-                            ),
+                Timestamp timestamp = appointmentData['data'];
+                String formattedDate =
+                    DateFormat('dd/MM/yyyy').format(timestamp.toDate());
+
+                return Card(
+                  elevation:
+                      4, // Ajuste o valor da elevação conforme necessário
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        title: Text(
+                          doctorName,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 29, 6, 229),
                           ),
                         ),
-                      ],
-                    ),
-                    Divider(),
-                  ],
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Cancelado',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Color.fromARGB(255, 29, 6, 229),
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Telefone: $telefone',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.black),
+                            ),
+                            Text(
+                              'Endereço: $endereco',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.black),
+                            ),
+                            Text(
+                              'Cidade: $cidade',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.black),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ListTile(
+                        //leading: Icon(Icons.access_time),
+                        title: Text(
+                          'Data: $formattedDate - Início: $horaInicio - Término: $horaTermino',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromARGB(255, 29, 6, 229),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Divider(),
+                    ],
+                  ),
                 );
               }).toList(),
             );
